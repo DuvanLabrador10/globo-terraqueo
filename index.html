@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Globo 3D</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: Arial, sans-serif;
+      background: #000;
+      color: #fff;
+      overflow: hidden;
+    }
+    #info {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(0,0,0,0.8);
+      padding: 12px;
+      border-radius: 8px;
+      z-index: 100;
+      max-width: 420px;
+      backdrop-filter: blur(6px);
+    }
+    h1 { font-size: 18px; margin-bottom: 8px; color: #4CAF50; }
+    #status { font-size: 13px; color: #4CAF50; margin-top: 6px; }
+    #error { color: #ff6b6b; margin-top: 6px; display: none; }
+    #container { width: 100vw; height: 100vh; }
+    button.small { margin-top: 8px; padding: 6px 10px; border-radius:6px; border: none; cursor: pointer; background:#2d3748; color:#fff; }
+    ul.student-list { list-style: none; padding-left: 0; font-size: 14px; }
+    p.student-info { list-style: none; padding-left: 0; font-size: 14px; }
+ </style>
+</head>
+<body>
+  <div id="info">
+    <h1>🌍 Globo 3D</h1>
+    <p><ul class="student-list">
+        <li>Juliana Ruiz - 1262368</li>
+        <li>Valentina Prada - 1262365</li>
+        <li>Angie Galvis - 1262366</li>
+        <li>Kevin Plata - 1262375</li>
+        </ul>
+    </p><br>
+    <p class="student-info" >
+        <h4 style="color:#3785d9;">Fuentes y/o referencias:</h4>
+         <a href="https://www.legiscomex.com/" target="_blank" style="color:#ffffff;">  Importaciones y Exportaciones</a><br/>
+         <a href="https://threejs.org/" target="_blank" style="color:#ffffff;">Balanza Comercial</a>
+    </p>
+    <div id="status">Cargando...</div>
+    <div id="error"></div>
+
+    <!-- Información / Instrucciones rápidas -->
+    <div style="margin-top:8px; font-size:12px; opacity:0.9">
+    </div>
+    <button id="reloadMap" class="small">Volver a cargar mapa</button>
+  </div>
+
+  <div id="container"></div>
+
+  <!-- importmap para tres como módulos -->
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+    const status = document.getElementById('status');
+    const errorDiv = document.getElementById('error');
+    const reloadBtn = document.getElementById('reloadMap');
+
+    function updateStatus(msg, isError = false) {
+      console.log(msg);
+      if (isError) {
+        errorDiv.textContent = msg;
+        errorDiv.style.display = 'block';
+        status.style.display = 'none';
+      } else {
+        errorDiv.style.display = 'none';
+        status.style.display = 'block';
+        status.textContent = msg;
+      }
+    }
+
+    // Simple check WebGL
+    function checkWebGL() {
+      try {
+        const canvas = document.createElement('canvas');
+        return !!(canvas.getContext('webgl') || canvas.getContext('experimental-webgl'));
+      } catch (e) {
+        return false;
+      }
+    }
+
+    if (!checkWebGL()) {
+      updateStatus('❌ WebGL no disponible en este navegador', true);
+      throw new Error('WebGL requerido');
+    }
+    updateStatus('✓ WebGL disponible');
+
+    // Scene / camera / renderer
+    const container = document.getElementById('container');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0a0a06);
+
+    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.set(0, 0, 7);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    container.appendChild(renderer.domElement);
+    updateStatus('✓ Renderer creado');
+
+    // Lights
+    const ambient = new THREE.AmbientLight(0xffffff, 0.6);
+    scene.add(ambient);
+    const dir = new THREE.DirectionalLight(0xffffff, 0.9);
+    dir.position.set(5, 3, 5);
+    scene.add(dir);
+
+    // Controls
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.minDistance = 2;
+    controls.maxDistance = 10;
+    updateStatus('✓ Controles configurados');
+
+    // Globe
+    const globeGeo = new THREE.SphereGeometry(1, 64, 64);
+    const globeMat = new THREE.MeshStandardMaterial({ color: 0x2196F3, roughness: 0.7, metalness: 0.1 });
+    const globe = new THREE.Mesh(globeGeo, globeMat);
+    scene.add(globe);
+    updateStatus('✓ Globo creado (base)');
+
+    // Try load earth texture (optional, doesn't break if fails)
+    const texLoader = new THREE.TextureLoader();
+    texLoader.load(
+      'https://threejs.org/examples/textures/land_ocean_ice_cloud_2048.jpg',
+      (tex) => {
+        try {
+          tex.colorSpace = THREE.SRGBColorSpace;
+        } catch (e) { /* older three versions may not have this property */ }
+        globeMat.map = tex;
+        globeMat.needsUpdate = true;
+        updateStatus('✓ Textura de la Tierra cargada (opcional)');
+      },
+      undefined,
+      () => {
+        console.warn('No se pudo cargar la textura de la Tierra; se mantiene color base.');
+      }
+    );
+
+    // MAP: plano grande que estará frente al globo
+    const mapGeo = new THREE.PlaneGeometry(3.2, 4.0);
+    const mapMat = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, side: THREE.DoubleSide });
+    const mapMesh = new THREE.Mesh(mapGeo, mapMat);
+    mapMesh.position.set(0, 0, 1.8);
+    scene.add(mapMesh);
+
+    updateStatus('⏳ Intentando cargar mapa local...');
+
+    // ---------- <-- AQUI PON TU NOMBRE DE ARCHIVO LOCAL (en la raíz del proyecto) -->
+    // Cambia 'mi_mapa_america.png' si tu archivo tiene otro nombre.
+    const mapURLs = [
+      'continente-america.png'   // <<--- imagen local en la raíz del proyecto
+    ];
+    // ---------------------------------------------------------------------------
+
+    let currentIndex = 0;
+    function tryLoadMap() {
+      if (currentIndex >= mapURLs.length) {
+        updateStatus('⚠️ No se encontró la imagen local. Se generará un mapa simple en canvas.');
+        createCanvasMap();
+        return;
+      }
+      const url = mapURLs[currentIndex];
+      console.log('Intentando cargar mapa local:', url);
+
+      texLoader.load(
+        url,
+        (tex) => {
+          try { tex.colorSpace = THREE.SRGBColorSpace; } catch (e) {}
+          mapMat.map = tex;
+          mapMat.opacity = 0; // empieza oculto
+          mapMat.needsUpdate = true;
+          updateStatus('✓ Mapa local cargado — haz clic en el globo para verlo');
+          console.log('Mapa local cargado OK:', url);
+        },
+        undefined,
+        (err) => {
+          console.warn('Error cargando mapa local:', url, err);
+          currentIndex++;
+          tryLoadMap();
+        }
+      );
+    }
+
+    // Si falla la carga local, genera un mapa con canvas (fallback)
+    function createCanvasMap() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 1200;
+      canvas.height = 1600;
+      const ctx = canvas.getContext('2d');
+
+      // fondo
+      ctx.fillStyle = '#1e3a5f';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // dibujitos simplificados (esto es solo un fallback visual)
+      ctx.fillStyle = '#4ecdc4';
+      ctx.fillRect(200, 300, 700, 200); // "EEUU"
+      ctx.fillStyle = '#95e1d3';
+      ctx.fillRect(330, 520, 400, 140); // "México"
+      ctx.fillStyle = '#f0e68c';
+      ctx.fillRect(450, 800, 420, 420); // "Sudamérica"
+
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 48px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText('MAPA DE AMÉRICA (FALLBACK)', canvas.width/2, 60);
+
+      const tex = new THREE.CanvasTexture(canvas);
+      mapMat.map = tex;
+      mapMat.needsUpdate = true;
+      updateStatus('✓ Mapa de fallback creado — haz clic en el globo');
+    }
+
+    // iniciar carga del mapa local
+    tryLoadMap();
+
+    // reload button por si cambias la imagen sin reiniciar el servidor
+    reloadBtn.addEventListener('click', () => {
+      updateStatus('⏳ Reintentando cargar mapa local...');
+      currentIndex = 0;
+      tryLoadMap();
+    });
+
+    // Interacción: raycast click en globo
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+    let mapVisible = false;
+
+    function onClick(e) {
+      mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+      raycaster.setFromCamera(mouse, camera);
+
+      const intersects = raycaster.intersectObject(globe);
+      if (intersects.length > 0) {
+        mapVisible = !mapVisible;
+        animateMap(mapVisible);
+        updateStatus(mapVisible ? '🗺️ Mapa visible' : '🌍 Vista del globo');
+      }
+    }
+    window.addEventListener('click', onClick);
+
+    // animación de aparición/desaparición del mapa
+    function animateMap(show) {
+      const from = mapMat.opacity;
+      const to = show ? 1 : 0;
+      const duration = 500;
+      const start = performance.now();
+      function step(now) {
+        const t = Math.min(1, (now - start) / duration);
+        const eased = t < 0.5 ? 2*t*t : 1 - Math.pow(-2*t + 2, 2)/2;
+        mapMat.opacity = from + (to - from) * eased;
+        mapMat.needsUpdate = true;
+        // zoom leve
+        if (show) {
+          const s = 1 + 0.12 * eased;
+          mapMesh.scale.set(s, s, s);
+          mapMesh.rotation.z = -0.05 * eased;
+        } else {
+          const s = 1.12 - 0.12 * eased;
+          mapMesh.scale.set(s, s, s);
+          mapMesh.rotation.z = -0.05 * (1 - eased);
+        }
+        if (t < 1) requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    }
+
+    // resize handler
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    // main loop
+    function animate() {
+      requestAnimationFrame(animate);
+      // rotación del globo (más lenta cuando el mapa está visible)
+      globe.rotation.y += mapVisible ? 0.0006 : 0.002;
+      controls.update();
+      renderer.render(scene, camera);
+    }
+    updateStatus('✓ Iniciando aplicación...');
+    animate();
+
+  </script>
+</body>
+</html>
