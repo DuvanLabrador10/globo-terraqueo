@@ -30,7 +30,25 @@
     button.small { margin-top: 8px; padding: 6px 10px; border-radius:6px; border: none; cursor: pointer; background:#2d3748; color:#fff; }
     ul.student-list { list-style: none; padding-left: 0; font-size: 14px; }
     p.student-info { list-style: none; padding-left: 0; font-size: 14px; }
- </style>
+
+    /* Tooltip/info box para país */
+    #countryInfo {
+      position: absolute;
+      min-width: 220px;
+      max-width: 320px;
+      background: rgba(20,20,20,0.95);
+      color: #fff;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.06);
+      z-index: 200;
+      display: none;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.7);
+      font-size: 13px;
+    }
+    #countryInfo h3 { margin: 0 0 6px 0; font-size: 15px; color: #ffd166; }
+    #countryInfo p { margin: 0; line-height: 1.3; white-space: pre-wrap; }
+  </style>
 </head>
 <body>
   <div id="info">
@@ -58,6 +76,8 @@
 
   <div id="container"></div>
 
+  <div id="countryInfo" role="dialog" aria-hidden="true"></div>
+
   <!-- importmap para tres como módulos -->
   <script type="importmap">
     {
@@ -75,6 +95,8 @@
     const status = document.getElementById('status');
     const errorDiv = document.getElementById('error');
     const reloadBtn = document.getElementById('reloadMap');
+    const container = document.getElementById('container');
+    const countryInfoEl = document.getElementById('countryInfo');
 
     function updateStatus(msg, isError = false) {
       console.log(msg);
@@ -106,12 +128,12 @@
     updateStatus('✓ WebGL disponible');
 
     // Scene / camera / renderer
-    const container = document.getElementById('container');
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x0a0a06);
 
     const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.set(0, 0, 7);
+    // alejar un poco para que no se vea gigante al cargar
+    camera.position.set(0, 0, 6);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -130,8 +152,8 @@
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
-    controls.minDistance = 2;
-    controls.maxDistance = 10;
+    controls.minDistance = 3;
+    controls.maxDistance = 12;
     updateStatus('✓ Controles configurados');
 
     // Globe
@@ -141,14 +163,15 @@
     scene.add(globe);
     updateStatus('✓ Globo creado (base)');
 
-    // Try load earth texture (optional, doesn't break if fails)
+    // Rotar inicialmente el globo para que América esté frente a la cámara
+    globe.rotation.y = Math.PI * 1.5; // Ajusta este valor si es necesario (aprox -90 grados para América)
+
+    // Try load earth texture (optional)
     const texLoader = new THREE.TextureLoader();
     texLoader.load(
       'https://threejs.org/examples/textures/land_ocean_ice_cloud_2048.jpg',
       (tex) => {
-        try {
-          tex.colorSpace = THREE.SRGBColorSpace;
-        } catch (e) { /* older three versions may not have this property */ }
+        try { tex.colorSpace = THREE.SRGBColorSpace; } catch (e) {}
         globeMat.map = tex;
         globeMat.needsUpdate = true;
         updateStatus('✓ Textura de la Tierra cargada (opcional)');
@@ -169,137 +192,203 @@
     updateStatus('⏳ Intentando cargar mapa local...');
 
     // ---------- <-- AQUI PON TU NOMBRE DE ARCHIVO LOCAL (en la raíz del proyecto) -->
-    // Cambia 'mi_mapa_america.png' si tu archivo tiene otro nombre.
-    const mapURLs = [
-      'continente-america.png'   // <<--- imagen local en la raíz del proyecto
-    ];
+    // Cambia 'continente-america.png' y 'continente-america-mask.png' si tus archivos se llaman distinto.
+    const visibleMapFile = './continente-america.png';       // imagen visible (tú ya la tienes)
+    const maskMapFile = './continente-america-mask.png';     // máscara con colores planos por país (debes crearla)
     // ---------------------------------------------------------------------------
 
-    let currentIndex = 0;
-    function tryLoadMap() {
-      if (currentIndex >= mapURLs.length) {
-        updateStatus('⚠️ No se encontró la imagen local. Se generará un mapa simple en canvas.');
-        createCanvasMap();
-        return;
+    // Color -> país mapping.
+    // **IMPORTANTE**: Los valores HEX aquí deben coincidir exactamente con los colores que pintes en la máscara.
+    // Clave: HEX sin '#' y en MAYÚSCULAS.
+    const colorToCountry = {
+      // Ejemplo pre-configurado — edita la info con lo que tú quieras mostrar
+      'FF0000': { name: 'Colombia', info:
+        'Colombia\nCapital: Bogotá\nPoblación aprox: 51M\nPIB (estimado): ...\nComentarios: aquí pones la info que desees.' },
+      '00FF00': { name: 'Brasil', info:
+        'Brasil\nCapital: Brasilia\nPoblación aprox: 215M\nComentarios: ejemplo.' },
+      '0000FF': { name: 'Perú', info:
+        'Perú\nCapital: Lima\nPoblación aprox: 33M\nComentarios: ejemplo.' },
+      '00B2FF': { name: 'Ecuador', info:
+        'Ecuador\nCapital: Quito\nPoblación aprox: 17M\nComentarios: ejemplo.' },
+      'BA00FF': { name: 'Panamá', info:
+        'Panamá\nCapital: Ciudad de Panamá\nPoblación aprox: 4.5M\nComentarios: ejemplo.' },
+      '00FFB0': { name: 'Venezuela', info:
+        'Venezuela\nCapital: Caracas\nPoblación aprox: 28M\nComentarios: ejemplo.' }
+      // Añade aquí los colores y los textos que quieras (usa mayúsculas y sin '#')
+    };
+
+    // Cargar imagen visible (mapa)
+    texLoader.load(
+      visibleMapFile,
+      (tex) => {
+        try { tex.colorSpace = THREE.SRGBColorSpace; } catch (e) {}
+        mapMat.map = tex;
+        mapMat.opacity = 0; // oculto inicialmente
+        mapMat.needsUpdate = true;
+        updateStatus('✓ Imagen del continente cargada (visible)');
+      },
+      undefined,
+      (err) => {
+        console.warn('No se pudo cargar la imagen visible:', err);
+        updateStatus('⚠️ No se encontró la imagen visible. Se usará un fallback.', true);
       }
-      const url = mapURLs[currentIndex];
-      console.log('Intentando cargar mapa local:', url);
+    );
 
-      texLoader.load(
-        url,
-        (tex) => {
-          try { tex.colorSpace = THREE.SRGBColorSpace; } catch (e) {}
-          mapMat.map = tex;
-          mapMat.opacity = 0; // empieza oculto
-          mapMat.needsUpdate = true;
-          updateStatus('✓ Mapa local cargado — haz clic en el globo para verlo');
-          console.log('Mapa local cargado OK:', url);
-        },
-        undefined,
-        (err) => {
-          console.warn('Error cargando mapa local:', url, err);
-          currentIndex++;
-          tryLoadMap();
-        }
-      );
-    }
+    // Cargar máscara en un canvas off-screen para muestrear píxeles
+    const maskImage = new Image();
+    maskImage.crossOrigin = 'anonymous'; // por si acaso
+    let maskCanvas, maskCtx;
+    maskImage.onload = () => {
+      maskCanvas = document.createElement('canvas');
+      maskCanvas.width = maskImage.width;
+      maskCanvas.height = maskImage.height;
+      maskCtx = maskCanvas.getContext('2d');
+      maskCtx.drawImage(maskImage, 0, 0);
+      updateStatus('✓ Máscara de países cargada (lista para clicks)');
+      // si quieres comprobar un color de prueba:
+      // const sample = maskCtx.getImageData(10,10,1,1).data; console.log(sample);
+    };
+    maskImage.onerror = (err)=> {
+      console.warn('Error cargando máscara:', err);
+      updateStatus('⚠️ No se pudo cargar la máscara. Click en países no funcionará.', true);
+    };
+    maskImage.src = maskMapFile;
 
-    // Si falla la carga local, genera un mapa con canvas (fallback)
-    function createCanvasMap() {
-      const canvas = document.createElement('canvas');
-      canvas.width = 1200;
-      canvas.height = 1600;
-      const ctx = canvas.getContext('2d');
-
-      // fondo
-      ctx.fillStyle = '#1e3a5f';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      // dibujitos simplificados (esto es solo un fallback visual)
-      ctx.fillStyle = '#4ecdc4';
-      ctx.fillRect(200, 300, 700, 200); // "EEUU"
-      ctx.fillStyle = '#95e1d3';
-      ctx.fillRect(330, 520, 400, 140); // "México"
-      ctx.fillStyle = '#f0e68c';
-      ctx.fillRect(450, 800, 420, 420); // "Sudamérica"
-
-      ctx.fillStyle = '#fff';
-      ctx.font = 'bold 48px Arial';
-      ctx.textAlign = 'center';
-      ctx.fillText('MAPA DE AMÉRICA (FALLBACK)', canvas.width/2, 60);
-
-      const tex = new THREE.CanvasTexture(canvas);
-      mapMat.map = tex;
-      mapMat.needsUpdate = true;
-      updateStatus('✓ Mapa de fallback creado — haz clic en el globo');
-    }
-
-    // iniciar carga del mapa local
-    tryLoadMap();
-
-    // reload button por si cambias la imagen sin reiniciar el servidor
-    reloadBtn.addEventListener('click', () => {
-      updateStatus('⏳ Reintentando cargar mapa local...');
-      currentIndex = 0;
-      tryLoadMap();
-    });
-
-    // Interacción: raycast click en globo
+    // Raycast y lectura de UVs del mesh
     const raycaster = new THREE.Raycaster();
-    const mouse = new THREE.Vector2();
+    const pointer = new THREE.Vector2();
+
+    // Variable para controlar visibilidad del mapa
     let mapVisible = false;
 
-    function onClick(e) {
-      mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
-      mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
-      raycaster.setFromCamera(mouse, camera);
+    function onPointerDown(e) {
+      // convertir a NDC relativas al canvas
+      const rect = renderer.domElement.getBoundingClientRect();
+      pointer.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      pointer.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
 
-      const intersects = raycaster.intersectObject(globe);
-      if (intersects.length > 0) {
-        mapVisible = !mapVisible;
-        animateMap(mapVisible);
-        updateStatus(mapVisible ? '🗺️ Mapa visible' : '🌍 Vista del globo');
+      raycaster.setFromCamera(pointer, camera);
+      
+      // priorizamos intersección contra el mapa (SOLO si está visible)
+      if (mapVisible) {
+        const intersMap = raycaster.intersectObject(mapMesh, true);
+        if (intersMap.length > 0) {
+          const inter = intersMap[0];
+          const uv = inter.uv;
+          if (!uv) { console.warn('Intersección sin UV'); return; }
+          const u = uv.x;
+          const v = 1 - uv.y; // invertir V para coincidir con canvas
+          sampleMaskAtUV(u, v, e.clientX, e.clientY);
+          return;
+        }
+      }
+      
+      // si el mapa NO está visible O no se hizo click en el mapa, detectamos click en el globo
+      const interGlobe = raycaster.intersectObject(globe, true);
+      if (interGlobe.length > 0) {
+        toggleMapVisibility();
       }
     }
-    window.addEventListener('click', onClick);
+    window.addEventListener('pointerdown', onPointerDown);
 
-    // animación de aparición/desaparición del mapa
-    function animateMap(show) {
-      const from = mapMat.opacity;
-      const to = show ? 1 : 0;
-      const duration = 500;
+    // muestreo de máscara y mostrar info
+    function sampleMaskAtUV(u, v, clientX, clientY) {
+      if (!maskCtx || !maskCanvas) {
+        console.warn('Máscara no lista para sampleo.');
+        return;
+      }
+      const x = Math.floor(u * (maskCanvas.width - 1));
+      const y = Math.floor(v * (maskCanvas.height - 1));
+      const px = maskCtx.getImageData(x, y, 1, 1).data; // [r,g,b,a]
+      const hex = rgbToHex(px[0], px[1], px[2]).toUpperCase().replace('#','');
+      console.log('Máscara pixel', x, y, '=>', hex);
+
+      const country = colorToCountry[hex];
+      if (country) {
+        showCountryInfo(country.name, country.info, clientX, clientY);
+      } else {
+        console.warn('No se encontró país para color:', hex);
+      }
+    }
+
+    function rgbToHex(r,g,b) {
+      return '#' + [r,g,b].map(v => v.toString(16).padStart(2,'0')).join('');
+    }
+
+    function showCountryInfo(title, text, clientX, clientY) {
+      countryInfoEl.innerHTML = `<h3>${escapeHtml(title)}</h3><p>${escapeHtml(text)}</p>`;
+      // posicionar cerca del click y evitar salirse
+      const padding = 12;
+      let left = clientX + 12;
+      let top = clientY + 12;
+      countryInfoEl.style.display = 'block';
+      countryInfoEl.style.left = `${left}px`;
+      countryInfoEl.style.top = `${top}px`;
+      countryInfoEl.setAttribute('aria-hidden','false');
+
+      // ajustar si sale de pantalla (calcular después de mostrar para obtener dimensiones)
+      const rect = countryInfoEl.getBoundingClientRect();
+      if (left + rect.width + padding > window.innerWidth) left = clientX - rect.width - 12;
+      if (top + rect.height + padding > window.innerHeight) top = clientY - rect.height - 12;
+      countryInfoEl.style.left = `${Math.max(8,left)}px`;
+      countryInfoEl.style.top = `${Math.max(8,top)}px`;
+
+      // auto ocultar después de 6s (puedes quitar esto si prefieres click para cerrar)
+      clearTimeout(countryInfoEl._hideTimeout);
+      countryInfoEl._hideTimeout = setTimeout(()=> {
+        countryInfoEl.style.display = 'none';
+        countryInfoEl.setAttribute('aria-hidden','true');
+      }, 6000);
+    }
+
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, function(m){ return ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' })[m]; });
+    }
+
+    // toggle map visibility con animación
+    function toggleMapVisibility() {
+      const from = mapMat.opacity || 0;
+      const to = mapVisible ? 0 : 1;
+      const duration = 360;
       const start = performance.now();
+
       function step(now) {
         const t = Math.min(1, (now - start) / duration);
         const eased = t < 0.5 ? 2*t*t : 1 - Math.pow(-2*t + 2, 2)/2;
         mapMat.opacity = from + (to - from) * eased;
         mapMat.needsUpdate = true;
-        // zoom leve
-        if (show) {
-          const s = 1 + 0.12 * eased;
-          mapMesh.scale.set(s, s, s);
-          mapMesh.rotation.z = -0.05 * eased;
+        if (t < 1) {
+          requestAnimationFrame(step);
         } else {
-          const s = 1.12 - 0.12 * eased;
-          mapMesh.scale.set(s, s, s);
-          mapMesh.rotation.z = -0.05 * (1 - eased);
+          mapVisible = !mapVisible;
         }
-        if (t < 1) requestAnimationFrame(step);
       }
       requestAnimationFrame(step);
     }
 
-    // resize handler
+    // reload button
+    reloadBtn.addEventListener('click', () => {
+      updateStatus('⏳ Reintentando cargar mapa & máscara...');
+      // recargar máscara (forzando bypass cache)
+      maskImage.src = maskMapFile + '?t=' + Date.now();
+      // recargar visible
+      texLoader.load(visibleMapFile,
+        tex => { try{tex.colorSpace = THREE.SRGBColorSpace}catch(e){}; mapMat.map = tex; mapMat.needsUpdate = true; updateStatus('✓ Imagen recargada'); },
+        undefined,
+        err => { updateStatus('⚠️ No se pudo recargar la imagen visible', true); }
+      );
+    });
+
+    // resize
     window.addEventListener('resize', () => {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
     });
 
-    // main loop
+    // animación principal
     function animate() {
       requestAnimationFrame(animate);
-      // rotación del globo (más lenta cuando el mapa está visible)
       globe.rotation.y += mapVisible ? 0.0006 : 0.002;
       controls.update();
       renderer.render(scene, camera);
