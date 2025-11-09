@@ -96,7 +96,7 @@
 </head>
 <body>
   <div id="info">
-    <h1>🌍 Globo 3D</h1>
+    <h1>🌍 ANÁLISIS DE LA BALANZA COMERCIAL</h1>
     <p><ul class="student-list">
         <li>Juliana Ruiz - 1262368</li>
         <li>Valentina Prada - 1262365</li>
@@ -109,13 +109,12 @@
          <a href="https://www.legiscomex.com/" target="_blank" style="color:#ffffff;">  Importaciones y Exportaciones</a><br/>
          <a href="https://www.dane.gov.co/" target="_blank" style="color:#ffffff;">Balanza Comercial</a>
     </p>
-    <div id="status">Cargando...</div>
     <div id="error"></div>
 
     <!-- Información / Instrucciones rápidas -->
     <div style="margin-top:8px; font-size:12px; opacity:0.9">
     </div>
-    <button id="reloadMap" class="small">Volver a cargar mapa</button>
+    <p id="reloadMap" class="small"></p>
   </div>
 
   <div id="container"></div>
@@ -142,18 +141,6 @@
     const container = document.getElementById('container');
     const countryInfoEl = document.getElementById('countryInfo');
 
-    function updateStatus(msg, isError = false) {
-      console.log(msg);
-      if (isError) {
-        errorDiv.textContent = msg;
-        errorDiv.style.display = 'block';
-        status.style.display = 'none';
-      } else {
-        errorDiv.style.display = 'none';
-        status.style.display = 'block';
-        status.textContent = msg;
-      }
-    }
 
     // Simple check WebGL
     function checkWebGL() {
@@ -166,10 +153,8 @@
     }
 
     if (!checkWebGL()) {
-      updateStatus('❌ WebGL no disponible en este navegador', true);
       throw new Error('WebGL requerido');
     }
-    updateStatus('✓ WebGL disponible');
 
     // Scene / camera / renderer
     const scene = new THREE.Scene();
@@ -182,7 +167,6 @@
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     container.appendChild(renderer.domElement);
-    updateStatus('✓ Renderer creado');
 
     // Lights
     const ambient = new THREE.AmbientLight(0xffffff, 0.6);
@@ -197,14 +181,12 @@
     controls.dampingFactor = 0.05;
     controls.minDistance = 3;
     controls.maxDistance = 12;
-    updateStatus('✓ Controles configurados');
 
     // Globe
     const globeGeo = new THREE.SphereGeometry(1, 64, 64);
     const globeMat = new THREE.MeshStandardMaterial({ color: 0x2196F3, roughness: 0.7, metalness: 0.1 });
     const globe = new THREE.Mesh(globeGeo, globeMat);
     scene.add(globe);
-    updateStatus('✓ Globo creado (base)');
 
     globe.rotation.y = Math.PI * 1.5;
 
@@ -216,7 +198,6 @@
         try { tex.colorSpace = THREE.SRGBColorSpace; } catch (e) {}
         globeMat.map = tex;
         globeMat.needsUpdate = true;
-        updateStatus('✓ Textura de la Tierra cargada (opcional)');
       },
       undefined,
       () => {
@@ -231,7 +212,6 @@
     mapMesh.position.set(0, 0, 1.8);
     scene.add(mapMesh);
 
-    updateStatus('⏳ Intentando cargar mapa local...');
 
     const visibleMapFile = './continente-america.png';
     const maskMapFile = './continente-america-mask.png';
@@ -242,14 +222,19 @@
         mainImage: './balanza-comercial.png',
         tabs: {
           'Importación': [
-            './imagenes/importacion1.png',
-            './imagenes/importacion2.png',
-            './imagenes/importacion3.png'
+            './importaciones-sectores-1.png',
+            './importaciones-sectores.png',
+            './importaciones-sectores-3.png'
           ],
           'Exportación': [
-            './imagenes/exportacion1.png',
+            './conclusiones-exportacion-grupo-1.png',
             './imagenes/exportacion2.png',
-            './imagenes/exportacion3.png'
+            './lugares-exportacion-1.png'
+          ],
+          'Conclusiones': [
+            './conclusiones-grupo-1.png' ,
+            './conclusiones-importacion-grupo-1.png',
+            './conclusiones-exportacion-grupo-1.png',
           ]
         },
         info: 'Capital: Bogotá' 
@@ -293,12 +278,10 @@
         mapMat.map = tex;
         mapMat.opacity = 0;
         mapMat.needsUpdate = true;
-        updateStatus('✓ Imagen del continente cargada (visible)');
       },
       undefined,
       (err) => {
         console.warn('No se pudo cargar la imagen visible:', err);
-        updateStatus('⚠️ No se encontró la imagen visible. Se usará un fallback.', true);
       }
     );
 
@@ -312,11 +295,10 @@
       maskCanvas.height = maskImage.height;
       maskCtx = maskCanvas.getContext('2d');
       maskCtx.drawImage(maskImage, 0, 0);
-      updateStatus('✓ Máscara de países cargada (lista para clicks)');
+     
     };
     maskImage.onerror = (err)=> {
       console.warn('Error cargando máscara:', err);
-      updateStatus('⚠️ No se pudo cargar la máscara. Click en países no funcionará.', true);
     };
     maskImage.src = maskMapFile;
 
@@ -476,12 +458,11 @@
     }
 
     reloadBtn.addEventListener('click', () => {
-      updateStatus('⏳ Reintentando cargar mapa & máscara...');
       maskImage.src = maskMapFile + '?t=' + Date.now();
       texLoader.load(visibleMapFile,
-        tex => { try{tex.colorSpace = THREE.SRGBColorSpace}catch(e){}; mapMat.map = tex; mapMat.needsUpdate = true; updateStatus('✓ Imagen recargada'); },
+        tex => { try{tex.colorSpace = THREE.SRGBColorSpace}catch(e){}; mapMat.map = tex; mapMat.needsUpdate = true; },
         undefined,
-        err => { updateStatus('⚠️ No se pudo recargar la imagen visible', true); }
+        err => { console.warn('Error recargando imagen visible:', err); }
       );
     });
 
@@ -497,7 +478,6 @@
       controls.update();
       renderer.render(scene, camera);
     }
-    updateStatus('✓ Iniciando aplicación...');
     animate();
   </script>
 </body>
