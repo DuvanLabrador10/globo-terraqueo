@@ -33,20 +33,25 @@
 
     /* Tooltip/info box para país */
     #countryInfo {
-      position: absolute;
-      min-width: 400px;
-      max-width: 600px;
-      background: rgba(20,20,20,0.95);
+      position: fixed;
+      width: 90vw;
+      max-width: 1200px;
+      height: 85vh;
+      background: rgba(20,20,20,0.98);
       color: #fff;
       padding: 16px;
+      padding-top: 45px;
       border-radius: 8px;
       border: 1px solid rgba(255,255,255,0.06);
       z-index: 200;
       display: none;
       box-shadow: 0 8px 30px rgba(0,0,0,0.7);
       font-size: 14px;
-      max-height: 80vh;
       overflow-y: auto;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: auto;
     }
     #countryInfo h3 { margin: 0 0 10px 0; font-size: 18px; color: #ffd166; }
     #countryInfo p { margin: 8px 0; line-height: 1.5; white-space: pre-wrap; }
@@ -55,6 +60,37 @@
       margin: 8px 0;
       border-radius: 6px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      max-width: 100%;
+      height: auto;
+    }
+    #countryInfo button:hover {
+      opacity: 0.9;
+    }
+    
+    /* Responsive para tablets */
+    @media (max-width: 1024px) {
+      #countryInfo {
+        width: 85vw;
+        height: 80vh;
+        font-size: 13px;
+      }
+      #countryInfo h3 {
+        font-size: 16px;
+      }
+    }
+    
+    /* Responsive para móviles */
+    @media (max-width: 768px) {
+      #countryInfo {
+        width: 95vw;
+        height: 90vh;
+        padding: 12px;
+        padding-top: 40px;
+        font-size: 12px;
+      }
+      #countryInfo h3 {
+        font-size: 15px;
+      }
     }
   </style>
 </head>
@@ -140,7 +176,6 @@
     scene.background = new THREE.Color(0x0a0a06);
 
     const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-    // alejar un poco para que no se vea gigante al cargar
     camera.position.set(0, 0, 6);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -171,8 +206,7 @@
     scene.add(globe);
     updateStatus('✓ Globo creado (base)');
 
-    // Rotar inicialmente el globo para que América esté frente a la cámara
-    globe.rotation.y = Math.PI * 1.5; // Ajusta este valor si es necesario (aprox -90 grados para América)
+    globe.rotation.y = Math.PI * 1.5;
 
     // Try load earth texture (optional)
     const texLoader = new THREE.TextureLoader();
@@ -199,24 +233,28 @@
 
     updateStatus('⏳ Intentando cargar mapa local...');
 
-    // ---------- <-- AQUI PON TU NOMBRE DE ARCHIVO LOCAL (en la raíz del proyecto) -->
-    // Cambia 'continente-america.png' y 'continente-america-mask.png' si tus archivos se llaman distinto.
-    const visibleMapFile = './continente-america.png';       // imagen visible (tú ya la tienes)
-    const maskMapFile = './continente-america-mask.png';     // máscara con colores planos por país (debes crearla)
-    // ---------------------------------------------------------------------------
+    const visibleMapFile = './continente-america.png';
+    const maskMapFile = './continente-america-mask.png';
 
-    // Color -> país mapping.
-    // **IMPORTANTE**: Los valores HEX aquí deben coincidir exactamente con los colores que pintes en la máscara.
-    // Clave: HEX sin '#' y en MAYÚSCULAS.
     const colorToCountry = {
-      // OPCIÓN 1: Una sola imagen
       'FF0000': { 
-        name: 'Colombia', 
-        image: './balanza-comercial.png',
-        info: 'Capital: Bogotá\nPoblación: 51M' 
+        name: 'Colombia',
+        mainImage: './balanza-comercial.png',
+        tabs: {
+          'Importación': [
+            './imagenes/importacion1.png',
+            './imagenes/importacion2.png',
+            './imagenes/importacion3.png'
+          ],
+          'Exportación': [
+            './imagenes/exportacion1.png',
+            './imagenes/exportacion2.png',
+            './imagenes/exportacion3.png'
+          ]
+        },
+        info: 'Capital: Bogotá' 
       },
       
-      // OPCIÓN 2: Múltiples imágenes (se muestran en grid)
       '00FF00': { 
         name: 'Brasil', 
         images: [
@@ -228,7 +266,6 @@
         info: 'Capital: Brasilia\nPoblación: 215M' 
       },
       
-      // OPCIÓN 3: Solo texto (sin imágenes)
       '0000FF': { 
         name: 'Perú', 
         info: 'Perú\nCapital: Lima\nPoblación aprox: 33M\nComentarios: ejemplo.' 
@@ -246,7 +283,6 @@
         name: 'Venezuela', 
         info: 'Venezuela\nCapital: Caracas\nPoblación aprox: 28M\nComentarios: ejemplo.' 
       }
-      // Añade aquí los colores y los textos/imágenes que quieras (usa mayúsculas y sin '#')
     };
 
     // Cargar imagen visible (mapa)
@@ -255,7 +291,7 @@
       (tex) => {
         try { tex.colorSpace = THREE.SRGBColorSpace; } catch (e) {}
         mapMat.map = tex;
-        mapMat.opacity = 0; // oculto inicialmente
+        mapMat.opacity = 0;
         mapMat.needsUpdate = true;
         updateStatus('✓ Imagen del continente cargada (visible)');
       },
@@ -268,7 +304,7 @@
 
     // Cargar máscara en un canvas off-screen para muestrear píxeles
     const maskImage = new Image();
-    maskImage.crossOrigin = 'anonymous'; // por si acaso
+    maskImage.crossOrigin = 'anonymous';
     let maskCanvas, maskCtx;
     maskImage.onload = () => {
       maskCanvas = document.createElement('canvas');
@@ -277,8 +313,6 @@
       maskCtx = maskCanvas.getContext('2d');
       maskCtx.drawImage(maskImage, 0, 0);
       updateStatus('✓ Máscara de países cargada (lista para clicks)');
-      // si quieres comprobar un color de prueba:
-      // const sample = maskCtx.getImageData(10,10,1,1).data; console.log(sample);
     };
     maskImage.onerror = (err)=> {
       console.warn('Error cargando máscara:', err);
@@ -290,18 +324,20 @@
     const raycaster = new THREE.Raycaster();
     const pointer = new THREE.Vector2();
 
-    // Variable para controlar visibilidad del mapa
     let mapVisible = false;
 
     function onPointerDown(e) {
-      // convertir a NDC relativas al canvas
+      // Si el click es dentro del tooltip, no hacer nada
+      if (countryInfoEl.style.display === 'block' && countryInfoEl.contains(e.target)) {
+        return;
+      }
+      
       const rect = renderer.domElement.getBoundingClientRect();
       pointer.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
       pointer.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
 
       raycaster.setFromCamera(pointer, camera);
       
-      // priorizamos intersección contra el mapa (SOLO si está visible)
       if (mapVisible) {
         const intersMap = raycaster.intersectObject(mapMesh, true);
         if (intersMap.length > 0) {
@@ -309,13 +345,12 @@
           const uv = inter.uv;
           if (!uv) { console.warn('Intersección sin UV'); return; }
           const u = uv.x;
-          const v = 1 - uv.y; // invertir V para coincidir con canvas
+          const v = 1 - uv.y;
           sampleMaskAtUV(u, v, e.clientX, e.clientY);
           return;
         }
       }
       
-      // si el mapa NO está visible O no se hizo click en el mapa, detectamos click en el globo
       const interGlobe = raycaster.intersectObject(globe, true);
       if (interGlobe.length > 0) {
         toggleMapVisibility();
@@ -323,7 +358,6 @@
     }
     window.addEventListener('pointerdown', onPointerDown);
 
-    // muestreo de máscara y mostrar info
     function sampleMaskAtUV(u, v, clientX, clientY) {
       if (!maskCtx || !maskCanvas) {
         console.warn('Máscara no lista para sampleo.');
@@ -331,7 +365,7 @@
       }
       const x = Math.floor(u * (maskCanvas.width - 1));
       const y = Math.floor(v * (maskCanvas.height - 1));
-      const px = maskCtx.getImageData(x, y, 1, 1).data; // [r,g,b,a]
+      const px = maskCtx.getImageData(x, y, 1, 1).data;
       const hex = rgbToHex(px[0], px[1], px[2]).toUpperCase().replace('#','');
       console.log('Máscara pixel', x, y, '=>', hex);
 
@@ -348,50 +382,79 @@
     }
 
     function showCountryInfo(title, data, clientX, clientY) {
-      // Construir el contenido basado en si hay imagen o texto
       let content = `<h3>${escapeHtml(title)}</h3>`;
       
-      if (data.images && Array.isArray(data.images)) {
-        // Si hay múltiples imágenes
-        content += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 10px; margin: 10px 0;">';
+      // Botón de cerrar (X) en la esquina superior derecha
+      content += `<button onclick="window.closeTooltip()" style="position: absolute; top: 12px; right: 12px; background: rgba(255,255,255,0.15); border: none; color: #fff; width: 28px; height: 28px; border-radius: 50%; cursor: pointer; font-size: 18px; line-height: 1; font-weight: bold; transition: background 0.3s; display: flex; align-items: center; justify-content: center;" onmouseover="this.style.background='rgba(255,255,255,0.25)'" onmouseout="this.style.background='rgba(255,255,255,0.15)'">×</button>`;
+      
+      if (data.mainImage && data.tabs) {
+        content += `<img src="${escapeHtml(data.mainImage)}" alt="${escapeHtml(title)}" style="max-width: 100%; height: auto; border-radius: 6px; margin: 10px 0;">`;
+        
+        content += '<div style="display: flex; gap: 10px; margin: 15px 0; flex-wrap: wrap;">';
+        Object.keys(data.tabs).forEach((tabName) => {
+          const tabId = `tab-${tabName.replace(/\s+/g, '-').toLowerCase()}`;
+          content += `<button onclick="window.showTab('${tabId}')" style="padding: 10px 20px; background: #3785d9; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500; transition: background 0.3s;">${escapeHtml(tabName)}</button>`;
+        });
+        content += '</div>';
+        
+        Object.entries(data.tabs).forEach(([tabName, images]) => {
+          const tabId = `tab-${tabName.replace(/\s+/g, '-').toLowerCase()}`;
+          content += `<div id="${tabId}" style="display: none;">`;
+          content += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 10px; margin: 10px 0;">';
+          images.forEach(img => {
+            content += `<img src="${escapeHtml(img)}" alt="${escapeHtml(tabName)}" style="width: 100%; height: auto; border-radius: 6px;">`;
+          });
+          content += '</div>';
+          content += `<button onclick="window.hideTab('${tabId}')" style="margin-top: 10px; padding: 8px 16px; background: #ff6b6b; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px;">Cerrar ${escapeHtml(tabName)}</button>`;
+          content += '</div>';
+        });
+      }
+      else if (data.images && Array.isArray(data.images)) {
+        content += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 10px; margin: 10px 0;">';
         data.images.forEach(img => {
           content += `<img src="${escapeHtml(img)}" alt="${escapeHtml(title)}" style="width: 100%; height: auto; border-radius: 6px;">`;
         });
         content += '</div>';
-      } else if (data.image) {
-        // Si hay una sola imagen
+      } 
+      else if (data.image) {
         content += `<img src="${escapeHtml(data.image)}" alt="${escapeHtml(title)}" style="max-width: 100%; height: auto; border-radius: 6px; margin: 10px 0;">`;
       }
       
       if (data.info) {
-        // Si hay texto adicional, agregarlo
         content += `<p>${escapeHtml(data.info)}</p>`;
       }
       
       countryInfoEl.innerHTML = content;
-      
-      // posicionar cerca del click y evitar salirse
-      const padding = 20;
-      let left = clientX + 15;
-      let top = clientY + 15;
       countryInfoEl.style.display = 'block';
-      countryInfoEl.style.left = `${left}px`;
-      countryInfoEl.style.top = `${top}px`;
       countryInfoEl.setAttribute('aria-hidden','false');
-
-      // ajustar si sale de pantalla (calcular después de mostrar para obtener dimensiones)
-      const rect = countryInfoEl.getBoundingClientRect();
-      if (left + rect.width + padding > window.innerWidth) left = clientX - rect.width - 15;
-      if (top + rect.height + padding > window.innerHeight) top = clientY - rect.height - 15;
-      countryInfoEl.style.left = `${Math.max(10,left)}px`;
-      countryInfoEl.style.top = `${Math.max(10,top)}px`;
     }
+    
+    window.showTab = function(tabId) {
+      document.querySelectorAll('[id^="tab-"]').forEach(tab => {
+        tab.style.display = 'none';
+      });
+      const tab = document.getElementById(tabId);
+      if (tab) {
+        tab.style.display = 'block';
+      }
+    };
+    
+    window.hideTab = function(tabId) {
+      const tab = document.getElementById(tabId);
+      if (tab) {
+        tab.style.display = 'none';
+      }
+    };
+    
+    window.closeTooltip = function() {
+      countryInfoEl.style.display = 'none';
+      countryInfoEl.setAttribute('aria-hidden','true');
+    };
 
     function escapeHtml(s) {
       return String(s).replace(/[&<>"']/g, function(m){ return ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' })[m]; });
     }
 
-    // toggle map visibility con animación
     function toggleMapVisibility() {
       const from = mapMat.opacity || 0;
       const to = mapVisible ? 0 : 1;
@@ -412,12 +475,9 @@
       requestAnimationFrame(step);
     }
 
-    // reload button
     reloadBtn.addEventListener('click', () => {
       updateStatus('⏳ Reintentando cargar mapa & máscara...');
-      // recargar máscara (forzando bypass cache)
       maskImage.src = maskMapFile + '?t=' + Date.now();
-      // recargar visible
       texLoader.load(visibleMapFile,
         tex => { try{tex.colorSpace = THREE.SRGBColorSpace}catch(e){}; mapMat.map = tex; mapMat.needsUpdate = true; updateStatus('✓ Imagen recargada'); },
         undefined,
@@ -425,14 +485,12 @@
       );
     });
 
-    // resize
     window.addEventListener('resize', () => {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
     });
 
-    // animación principal
     function animate() {
       requestAnimationFrame(animate);
       globe.rotation.y += mapVisible ? 0.0006 : 0.002;
@@ -441,8 +499,6 @@
     }
     updateStatus('✓ Iniciando aplicación...');
     animate();
-
-
   </script>
 </body>
 </html>
