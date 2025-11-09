@@ -25,7 +25,7 @@
     }
     h1 { font-size: 18px; margin-bottom: 8px; color: #4CAF50; }
     #status { font-size: 13px; color: #4CAF50; margin-top: 6px; }
-    #error { color: #ff6b6b; margin-top: 6px; display: none; }
+    #error { color: #f44949; margin-top: 6px; display: none; }
     #container { width: 100vw; height: 100vh; }
     button.small { margin-top: 8px; padding: 6px 10px; border-radius:6px; border: none; cursor: pointer; background:#2d3748; color:#fff; }
     ul.student-list { list-style: none; padding-left: 0; font-size: 14px; }
@@ -37,7 +37,7 @@
       width: 90vw;
       max-width: 1200px;
       height: 85vh;
-      background: rgba(20,20,20,0.98);
+      background: rgb(255 255 255 / 98%);
       color: #fff;
       padding: 16px;
       padding-top: 45px;
@@ -53,7 +53,7 @@
       transform: translate(-50%, -50%);
       pointer-events: auto;
     }
-    #countryInfo h3 { margin: 0 0 10px 0; font-size: 18px; color: #ffd166; }
+    #countryInfo h3 { margin: 0 0 10px 0; font-size: 18px; color: #f44949; text-align: center;}
     #countryInfo p { margin: 8px 0; line-height: 1.5; white-space: pre-wrap; }
     #countryInfo img { 
       display: block;
@@ -66,6 +66,10 @@
     #countryInfo button:hover {
       opacity: 0.9;
     }
+
+    #countryInfo img.no-shadow {
+  box-shadow: none;
+}
     
     /* Responsive para tablets */
     @media (max-width: 1024px) {
@@ -217,28 +221,36 @@
     const maskMapFile = './continente-america-mask.png';
 
     const colorToCountry = {
-      'FF0000': { 
-        name: 'Colombia',
-        mainImage: './balanza-comercial.png',
-        tabs: {
-          'Importación': [
-            './importaciones-sectores-1.png',
-            './importaciones-sectores.png',
-            './importaciones-sectores-3.png'
-          ],
-          'Exportación': [
-            './conclusiones-exportacion-grupo-1.png',
-            './imagenes/exportacion2.png',
+     'FF0000': { 
+  name: 'Colombia',
+  countryImage: './colombia-1.png',
+  mainImage: './balanza-comercial.png',
+  tabs: {
+     'Norte de Santander': {
+      mainImage: './nte.png',
+       subTabs: {
+         'Importación Norte de Santander': [
+            './lugares-exportacion-1.png',
+            './lugares-exportacion-1.png',
+            './lugares-exportacion-1.png',
+            './lugares-exportacion-1.png',
+            './lugares-exportacion-1.png',
             './lugares-exportacion-1.png'
-          ],
-          'Conclusiones': [
-            './conclusiones-grupo-1.png' ,
-            './conclusiones-importacion-grupo-1.png',
-            './conclusiones-exportacion-grupo-1.png',
-          ]
-        },
-        info: 'Capital: Bogotá' 
-      },
+         ],
+         'Exportación Norte de Santander': [
+            './lugares-exportacion-1.png',
+            './lugares-exportacion-1.png',
+            './lugares-exportacion-1.png'
+         ]
+       }
+     },
+    'Conclusiones': [
+      './conclusiones-grupo-1.png',
+      './conclusiones-grupo-nte-1.png',
+    ]
+  },
+  info: 'Capital: Bogotá' 
+},
       
       '00FF00': { 
         name: 'Brasil', 
@@ -364,52 +376,108 @@
     }
 
     function showCountryInfo(title, data, clientX, clientY) {
-      let content = `<h3>${escapeHtml(title)}</h3>`;
+  let content = `<h3>${escapeHtml(title)}</h3>`;
+  
+  // Botón de cerrar (X) en la esquina superior derecha
+  content += `<button onclick="window.closeTooltip()" style="position: absolute; top: 12px; right: 12px; background: rgba(255,255,255,0.15); border: none; color: #000; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-size: 20px; line-height: 1; font-weight: bold; transition: background 0.3s; display: flex; align-items: center; justify-content: center;" onmouseover="this.style.background='rgba(255,255,255,0.25)'" onmouseout="this.style.background='rgba(255,255,255,0.15)'">×</button>`;
+  
+  if (data.countryImage) {
+    content += `<img src="${escapeHtml(data.countryImage)}" alt="${escapeHtml(title)}" class="no-shadow" style="max-width: 30%; height: 30%; margin: 10px auto; display: block;">`;
+  }
+
+  if (data.mainImage && data.tabs) {
+    content += `<img src="${escapeHtml(data.mainImage)}" alt="${escapeHtml(title)}" style="max-width: 70%; height: auto; border-radius: 6px; margin: 10px auto; display: block;">`;
+    
+    content += '<div style="display: flex; gap: 10px; margin: 15px 0; flex-wrap: wrap;">';
+    Object.keys(data.tabs).forEach((tabName) => {
+      const tabId = `tab-${tabName.replace(/\s+/g, '-').toLowerCase()}`;
+      content += `<button onclick="window.showTab('${tabId}')" style="padding: 10px 20px; background: #3785d9; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500; transition: background 0.3s;">${escapeHtml(tabName)}</button>`;
+    });
+    content += '</div>';
+    
+    Object.entries(data.tabs).forEach(([tabName, tabContent]) => {
+      const tabId = `tab-${tabName.replace(/\s+/g, '-').toLowerCase()}`;
+      content += `<div id="${tabId}" style="display: none;">`;
       
-      // Botón de cerrar (X) en la esquina superior derecha
-      content += `<button onclick="window.closeTooltip()" style="position: absolute; top: 12px; right: 12px; background: rgba(255,255,255,0.15); border: none; color: #fff; width: 28px; height: 28px; border-radius: 50%; cursor: pointer; font-size: 18px; line-height: 1; font-weight: bold; transition: background 0.3s; display: flex; align-items: center; justify-content: center;" onmouseover="this.style.background='rgba(255,255,255,0.25)'" onmouseout="this.style.background='rgba(255,255,255,0.15)'">×</button>`;
-      
-      if (data.mainImage && data.tabs) {
-        content += `<img src="${escapeHtml(data.mainImage)}" alt="${escapeHtml(title)}" style="max-width: 100%; height: auto; border-radius: 6px; margin: 10px 0;">`;
+      // Si tiene sub-pestañas
+      if (tabContent.subTabs) {
+        // Mostrar imagen principal si existe
+        if (tabContent.mainImage) {
+         content += `<img src="${escapeHtml(tabContent.mainImage)}" alt="${escapeHtml(tabName)}" style="max-width: 30%; height: auto; border-radius: 6px; margin: 10px auto; display: block;">`;
+        }
         
         content += '<div style="display: flex; gap: 10px; margin: 15px 0; flex-wrap: wrap;">';
-        Object.keys(data.tabs).forEach((tabName) => {
-          const tabId = `tab-${tabName.replace(/\s+/g, '-').toLowerCase()}`;
-          content += `<button onclick="window.showTab('${tabId}')" style="padding: 10px 20px; background: #3785d9; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500; transition: background 0.3s;">${escapeHtml(tabName)}</button>`;
+        Object.keys(tabContent.subTabs).forEach((subTabName) => {
+          const subTabId = `${tabId}-${subTabName.replace(/\s+/g, '-').toLowerCase()}`;
+          content += `<button onclick="window.showSubTab('${subTabId}')" style="padding: 8px 16px; background: #28a745; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500; transition: background 0.3s;">${escapeHtml(subTabName)}</button>`;
         });
         content += '</div>';
         
-        Object.entries(data.tabs).forEach(([tabName, images]) => {
-          const tabId = `tab-${tabName.replace(/\s+/g, '-').toLowerCase()}`;
-          content += `<div id="${tabId}" style="display: none;">`;
+        Object.entries(tabContent.subTabs).forEach(([subTabName, images]) => {
+          const subTabId = `${tabId}-${subTabName.replace(/\s+/g, '-').toLowerCase()}`;
+          content += `<div id="${subTabId}" style="display: none;">`;
           content += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 10px; margin: 10px 0;">';
           images.forEach(img => {
-            content += `<img src="${escapeHtml(img)}" alt="${escapeHtml(tabName)}" style="width: 100%; height: auto; border-radius: 6px;">`;
+            content += `<img src="${escapeHtml(img)}" alt="${escapeHtml(subTabName)}" style="width: 70%; height: auto; border-radius: 6px; margin: 0 auto; display: block;">`;
           });
           content += '</div>';
-          content += `<button onclick="window.hideTab('${tabId}')" style="margin-top: 10px; padding: 8px 16px; background: #ff6b6b; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px;">Cerrar ${escapeHtml(tabName)}</button>`;
+          content += `<button onclick="window.hideSubTab('${subTabId}')" style="margin-top: 10px; padding: 8px 16px; background: #dc3545; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px;">Cerrar ${escapeHtml(subTabName)}</button>`;
           content += '</div>';
         });
       }
-      else if (data.images && Array.isArray(data.images)) {
+      // Si es un array de imágenes (como "Conclusiones")
+      else if (Array.isArray(tabContent)) {
         content += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 10px; margin: 10px 0;">';
-        data.images.forEach(img => {
-          content += `<img src="${escapeHtml(img)}" alt="${escapeHtml(title)}" style="width: 100%; height: auto; border-radius: 6px;">`;
+        tabContent.forEach(img => {
+          content += `<img src="${escapeHtml(img)}" alt="${escapeHtml(tabName)}" style="width: 90%; height: auto; border-radius: 6px; margin: 0 auto; display: block;">`;
         });
         content += '</div>';
-      } 
-      else if (data.image) {
-        content += `<img src="${escapeHtml(data.image)}" alt="${escapeHtml(title)}" style="max-width: 100%; height: auto; border-radius: 6px; margin: 10px 0;">`;
       }
       
-      if (data.info) {
-        content += `<p>${escapeHtml(data.info)}</p>`;
-      }
-      
-      countryInfoEl.innerHTML = content;
-      countryInfoEl.style.display = 'block';
-      countryInfoEl.setAttribute('aria-hidden','false');
+      content += `<button onclick="window.hideTab('${tabId}')" style="margin-top: 10px; padding: 8px 16px; background: #f44949; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px;">Cerrar ${escapeHtml(tabName)}</button>`;
+      content += '</div>';
+    });
+  }
+  else if (data.images && Array.isArray(data.images)) {
+    content += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 10px; margin: 10px 0;">';
+    data.images.forEach(img => {
+      content += `<img src="${escapeHtml(img)}" alt="${escapeHtml(title)}" style="width: 100%; height: auto; border-radius: 6px;">`;
+    });
+    content += '</div>';
+  } 
+  else if (data.image) {
+    content += `<img src="${escapeHtml(data.image)}" alt="${escapeHtml(title)}" style="max-width: 100%; height: auto; border-radius: 6px; margin: 10px 0;">`;
+  }
+  
+  if (data.info) {
+    content += `<p>${escapeHtml(data.info)}</p>`;
+  }
+  
+  countryInfoEl.innerHTML = content;
+  countryInfoEl.style.display = 'block';
+  countryInfoEl.setAttribute('aria-hidden','false');
+}
+
+    window.showSubTab = function(subTabId) {
+  // Ocultar todas las sub-pestañas del mismo grupo
+  const parentTabId = subTabId.split('-').slice(0, 3).join('-');
+  document.querySelectorAll(`[id^="${parentTabId}-"]`).forEach(subTab => {
+    if (subTab.id.startsWith(parentTabId + '-tab-')) {
+      subTab.style.display = 'none';
     }
+  });
+  const subTab = document.getElementById(subTabId);
+  if (subTab) {
+    subTab.style.display = 'block';
+  }
+};
+
+window.hideSubTab = function(subTabId) {
+  const subTab = document.getElementById(subTabId);
+  if (subTab) {
+    subTab.style.display = 'none';
+  }
+};
     
     window.showTab = function(tabId) {
       document.querySelectorAll('[id^="tab-"]').forEach(tab => {
