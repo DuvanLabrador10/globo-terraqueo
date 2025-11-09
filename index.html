@@ -34,20 +34,28 @@
     /* Tooltip/info box para país */
     #countryInfo {
       position: absolute;
-      min-width: 220px;
-      max-width: 320px;
+      min-width: 400px;
+      max-width: 600px;
       background: rgba(20,20,20,0.95);
       color: #fff;
-      padding: 10px;
+      padding: 16px;
       border-radius: 8px;
       border: 1px solid rgba(255,255,255,0.06);
       z-index: 200;
       display: none;
       box-shadow: 0 8px 30px rgba(0,0,0,0.7);
-      font-size: 13px;
+      font-size: 14px;
+      max-height: 80vh;
+      overflow-y: auto;
     }
-    #countryInfo h3 { margin: 0 0 6px 0; font-size: 15px; color: #ffd166; }
-    #countryInfo p { margin: 0; line-height: 1.3; white-space: pre-wrap; }
+    #countryInfo h3 { margin: 0 0 10px 0; font-size: 18px; color: #ffd166; }
+    #countryInfo p { margin: 8px 0; line-height: 1.5; white-space: pre-wrap; }
+    #countryInfo img { 
+      display: block;
+      margin: 8px 0;
+      border-radius: 6px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
   </style>
 </head>
 <body>
@@ -201,20 +209,44 @@
     // **IMPORTANTE**: Los valores HEX aquí deben coincidir exactamente con los colores que pintes en la máscara.
     // Clave: HEX sin '#' y en MAYÚSCULAS.
     const colorToCountry = {
-      // Ejemplo pre-configurado — edita la info con lo que tú quieras mostrar
-      'FF0000': { name: 'Colombia', info:
-        'Colombia\nCapital: Bogotá\nPoblación aprox: 51M\nPIB (estimado): ...\nComentarios: aquí pones la info que desees.' },
-      '00FF00': { name: 'Brasil', info:
-        'Brasil\nCapital: Brasilia\nPoblación aprox: 215M\nComentarios: ejemplo.' },
-      '0000FF': { name: 'Perú', info:
-        'Perú\nCapital: Lima\nPoblación aprox: 33M\nComentarios: ejemplo.' },
-      '00B2FF': { name: 'Ecuador', info:
-        'Ecuador\nCapital: Quito\nPoblación aprox: 17M\nComentarios: ejemplo.' },
-      'BA00FF': { name: 'Panamá', info:
-        'Panamá\nCapital: Ciudad de Panamá\nPoblación aprox: 4.5M\nComentarios: ejemplo.' },
-      '00FFB0': { name: 'Venezuela', info:
-        'Venezuela\nCapital: Caracas\nPoblación aprox: 28M\nComentarios: ejemplo.' }
-      // Añade aquí los colores y los textos que quieras (usa mayúsculas y sin '#')
+      // OPCIÓN 1: Una sola imagen
+      'FF0000': { 
+        name: 'Colombia', 
+        image: './balanza-comercial.png',
+        info: 'Capital: Bogotá\nPoblación: 51M' 
+      },
+      
+      // OPCIÓN 2: Múltiples imágenes (se muestran en grid)
+      '00FF00': { 
+        name: 'Brasil', 
+        images: [
+          './imagenes/brasil1.png',
+          './imagenes/brasil2.png',
+          './imagenes/brasil3.png',
+          './imagenes/brasil4.png'
+        ],
+        info: 'Capital: Brasilia\nPoblación: 215M' 
+      },
+      
+      // OPCIÓN 3: Solo texto (sin imágenes)
+      '0000FF': { 
+        name: 'Perú', 
+        info: 'Perú\nCapital: Lima\nPoblación aprox: 33M\nComentarios: ejemplo.' 
+      },
+      
+      '00B2FF': { 
+        name: 'Ecuador', 
+        info: 'Ecuador\nCapital: Quito\nPoblación aprox: 17M\nComentarios: ejemplo.' 
+      },
+      'BA00FF': { 
+        name: 'Panamá', 
+        info: 'Panamá\nCapital: Ciudad de Panamá\nPoblación aprox: 4.5M\nComentarios: ejemplo.' 
+      },
+      '00FFB0': { 
+        name: 'Venezuela', 
+        info: 'Venezuela\nCapital: Caracas\nPoblación aprox: 28M\nComentarios: ejemplo.' 
+      }
+      // Añade aquí los colores y los textos/imágenes que quieras (usa mayúsculas y sin '#')
     };
 
     // Cargar imagen visible (mapa)
@@ -305,7 +337,7 @@
 
       const country = colorToCountry[hex];
       if (country) {
-        showCountryInfo(country.name, country.info, clientX, clientY);
+        showCountryInfo(country.name, country, clientX, clientY);
       } else {
         console.warn('No se encontró país para color:', hex);
       }
@@ -315,12 +347,33 @@
       return '#' + [r,g,b].map(v => v.toString(16).padStart(2,'0')).join('');
     }
 
-    function showCountryInfo(title, text, clientX, clientY) {
-      countryInfoEl.innerHTML = `<h3>${escapeHtml(title)}</h3><p>${escapeHtml(text)}</p>`;
+    function showCountryInfo(title, data, clientX, clientY) {
+      // Construir el contenido basado en si hay imagen o texto
+      let content = `<h3>${escapeHtml(title)}</h3>`;
+      
+      if (data.images && Array.isArray(data.images)) {
+        // Si hay múltiples imágenes
+        content += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 10px; margin: 10px 0;">';
+        data.images.forEach(img => {
+          content += `<img src="${escapeHtml(img)}" alt="${escapeHtml(title)}" style="width: 100%; height: auto; border-radius: 6px;">`;
+        });
+        content += '</div>';
+      } else if (data.image) {
+        // Si hay una sola imagen
+        content += `<img src="${escapeHtml(data.image)}" alt="${escapeHtml(title)}" style="max-width: 100%; height: auto; border-radius: 6px; margin: 10px 0;">`;
+      }
+      
+      if (data.info) {
+        // Si hay texto adicional, agregarlo
+        content += `<p>${escapeHtml(data.info)}</p>`;
+      }
+      
+      countryInfoEl.innerHTML = content;
+      
       // posicionar cerca del click y evitar salirse
-      const padding = 12;
-      let left = clientX + 12;
-      let top = clientY + 12;
+      const padding = 20;
+      let left = clientX + 15;
+      let top = clientY + 15;
       countryInfoEl.style.display = 'block';
       countryInfoEl.style.left = `${left}px`;
       countryInfoEl.style.top = `${top}px`;
@@ -328,17 +381,10 @@
 
       // ajustar si sale de pantalla (calcular después de mostrar para obtener dimensiones)
       const rect = countryInfoEl.getBoundingClientRect();
-      if (left + rect.width + padding > window.innerWidth) left = clientX - rect.width - 12;
-      if (top + rect.height + padding > window.innerHeight) top = clientY - rect.height - 12;
-      countryInfoEl.style.left = `${Math.max(8,left)}px`;
-      countryInfoEl.style.top = `${Math.max(8,top)}px`;
-
-      // auto ocultar después de 6s (puedes quitar esto si prefieres click para cerrar)
-      clearTimeout(countryInfoEl._hideTimeout);
-      countryInfoEl._hideTimeout = setTimeout(()=> {
-        countryInfoEl.style.display = 'none';
-        countryInfoEl.setAttribute('aria-hidden','true');
-      }, 6000);
+      if (left + rect.width + padding > window.innerWidth) left = clientX - rect.width - 15;
+      if (top + rect.height + padding > window.innerHeight) top = clientY - rect.height - 15;
+      countryInfoEl.style.left = `${Math.max(10,left)}px`;
+      countryInfoEl.style.top = `${Math.max(10,top)}px`;
     }
 
     function escapeHtml(s) {
@@ -395,6 +441,7 @@
     }
     updateStatus('✓ Iniciando aplicación...');
     animate();
+
 
   </script>
 </body>
