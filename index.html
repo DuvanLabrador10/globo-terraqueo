@@ -31,45 +31,275 @@
     ul.student-list { list-style: none; padding-left: 0; font-size: 14px; }
     p.student-info { list-style: none; padding-left: 0; font-size: 14px; }
 
-    /* Tooltip/info box para país */
+    /* Tooltip/info box para país - MEJORADO */
     #countryInfo {
       position: fixed;
       width: 90vw;
       max-width: 1200px;
       height: 85vh;
-      background: rgb(255 255 255 / 98%);
-      color: #fff;
+      background: linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(245,245,255,0.98) 100%);
+      color: #333;
       padding: 16px;
       padding-top: 45px;
-      border-radius: 8px;
-      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 16px;
+      border: 2px solid rgba(59,130,246,0.3);
       z-index: 200;
       display: none;
-      box-shadow: 0 8px 30px rgba(0,0,0,0.7);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.4), 0 0 100px rgba(59,130,246,0.2);
       font-size: 14px;
       overflow-y: auto;
       left: 50%;
       top: 50%;
-      transform: translate(-50%, -50%);
+      transform: translate(-50%, -50%) scale(0.8);
       pointer-events: auto;
+      opacity: 0;
+      transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
-    #countryInfo h3 { margin: 0 0 10px 0; font-size: 18px; color: #f44949; text-align: center;}
-    #countryInfo p { margin: 8px 0; line-height: 1.5; white-space: pre-wrap; }
+    
+    #countryInfo.show {
+      transform: translate(-50%, -50%) scale(1);
+      opacity: 1;
+    }
+    
+    #countryInfo h3 { 
+      margin: 0 0 15px 0; 
+      font-size: 28px; 
+      color: #1e40af;
+      text-align: center;
+      font-weight: bold;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+      animation: slideDown 0.6s ease-out;
+    }
+    
+    @keyframes slideDown {
+      from {
+        transform: translateY(-20px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+    
+    #countryInfo p { 
+      margin: 8px 0; 
+      line-height: 1.8; 
+      white-space: pre-wrap;
+      color: #1f2937;
+    }
+    
     #countryInfo img { 
       display: block;
-      margin: 8px 0;
-      border-radius: 6px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      margin: 12px auto;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
       max-width: 100%;
       height: auto;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      animation: fadeInUp 0.6s ease-out;
     }
-    #countryInfo button:hover {
-      opacity: 0.9;
+    
+    #countryInfo img:hover {
+      transform: scale(1.05);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.25);
     }
-
+    
+    @keyframes fadeInUp {
+      from {
+        transform: translateY(20px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+    
     #countryInfo img.no-shadow {
-  box-shadow: none;
-}
+      box-shadow: none;
+    }
+    
+    /* Botones de pestañas mejorados */
+    .tab-button {
+      padding: 12px 24px;
+      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(59,130,246,0.3);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .tab-button::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+      transition: left 0.5s;
+    }
+    
+    .tab-button:hover::before {
+      left: 100%;
+    }
+    
+    .tab-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(59,130,246,0.4);
+    }
+    
+    .tab-button:active {
+      transform: translateY(0);
+    }
+    
+    .tab-button.active {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      box-shadow: 0 4px 15px rgba(16,185,129,0.4);
+    }
+    
+    /* Sub-pestañas mejoradas */
+    .sub-tab-button {
+      padding: 10px 20px;
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      box-shadow: 0 3px 12px rgba(16,185,129,0.3);
+    }
+    
+    .sub-tab-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 18px rgba(16,185,129,0.4);
+    }
+    
+    .sub-tab-button.active {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      box-shadow: 0 3px 12px rgba(245,158,11,0.4);
+    }
+    
+    /* Botón de cerrar mejorado */
+    .close-button {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: linear-gradient(135deg, rgba(239,68,68,0.9) 0%, rgba(220,38,38,0.9) 100%);
+      border: none;
+      color: white;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 24px;
+      line-height: 1;
+      font-weight: bold;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 15px rgba(239,68,68,0.4);
+    }
+    
+    .close-button:hover {
+      transform: rotate(90deg) scale(1.1);
+      box-shadow: 0 6px 20px rgba(239,68,68,0.6);
+    }
+    
+    /* Contenedores de pestañas con animación */
+    .tab-content {
+      animation: fadeIn 0.5s ease-out;
+    }
+    
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateX(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+    
+    /* Grid de imágenes mejorado */
+    .image-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 15px;
+      margin: 15px 0;
+    }
+    
+    .image-grid img {
+      width: 100%;
+      height: auto;
+      border-radius: 12px;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+    
+    .image-grid img:hover {
+      transform: scale(1.08);
+      box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+      z-index: 10;
+    }
+    
+    /* Loader para imágenes */
+    .image-loader {
+      position: relative;
+      min-height: 200px;
+      background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+      background-size: 200% 100%;
+      animation: loading 1.5s infinite;
+      border-radius: 12px;
+    }
+    
+    @keyframes loading {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+    
+    /* Contador animado */
+    .stat-counter {
+      display: inline-block;
+      font-size: 36px;
+      font-weight: bold;
+      color: #3b82f6;
+      margin: 10px 0;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    /* Scrollbar personalizado */
+    #countryInfo::-webkit-scrollbar {
+      width: 12px;
+    }
+    
+    #countryInfo::-webkit-scrollbar-track {
+      background: rgba(0,0,0,0.05);
+      border-radius: 10px;
+    }
+    
+    #countryInfo::-webkit-scrollbar-thumb {
+      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+      border-radius: 10px;
+      border: 2px solid transparent;
+      background-clip: padding-box;
+    }
+    
+    #countryInfo::-webkit-scrollbar-thumb:hover {
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+      background-clip: padding-box;
+    }
     
     /* Responsive para tablets */
     @media (max-width: 1024px) {
@@ -79,7 +309,11 @@
         font-size: 13px;
       }
       #countryInfo h3 {
-        font-size: 16px;
+        font-size: 24px;
+      }
+      .tab-button {
+        padding: 10px 20px;
+        font-size: 13px;
       }
     }
     
@@ -93,7 +327,15 @@
         font-size: 12px;
       }
       #countryInfo h3 {
-        font-size: 15px;
+        font-size: 20px;
+      }
+      .tab-button {
+        padding: 8px 16px;
+        font-size: 12px;
+      }
+      .sub-tab-button {
+        padding: 8px 14px;
+        font-size: 12px;
       }
     }
   </style>
@@ -144,7 +386,6 @@
     const reloadBtn = document.getElementById('reloadMap');
     const container = document.getElementById('container');
     const countryInfoEl = document.getElementById('countryInfo');
-
 
     // Simple check WebGL
     function checkWebGL() {
@@ -215,7 +456,6 @@
     const mapMesh = new THREE.Mesh(mapGeo, mapMat);
     mapMesh.position.set(0, 0, 1.8);
     scene.add(mapMesh);
-
 
     const visibleMapFile = './continente-america.png';
     const maskMapFile = './continente-america-mask.png';
@@ -418,113 +658,149 @@
     }
 
     function showCountryInfo(title, data, clientX, clientY) {
-  let content = `<h3>${escapeHtml(title)}</h3>`;
-  
-  // Botón de cerrar (X) en la esquina superior derecha
-  content += `<button onclick="window.closeTooltip()" style="position: absolute; top: 12px; right: 12px; background: rgba(255,255,255,0.15); border: none; color: #000; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-size: 20px; line-height: 1; font-weight: bold; transition: background 0.3s; display: flex; align-items: center; justify-content: center;" onmouseover="this.style.background='rgba(255,255,255,0.25)'" onmouseout="this.style.background='rgba(255,255,255,0.15)'">×</button>`;
-  
-  if (data.countryImage) {
-    content += `<img src="${escapeHtml(data.countryImage)}" alt="${escapeHtml(title)}" class="no-shadow" style="max-width: 30%; height: 30%; margin: 10px auto; display: block;">`;
-  }
-
-  if (data.mainImage && data.tabs) {
-    content += `<img src="${escapeHtml(data.mainImage)}" alt="${escapeHtml(title)}" style="max-width: 70%; height: auto; border-radius: 6px; margin: 10px auto; display: block;">`;
-    
-    content += '<div style="display: flex; gap: 10px; margin: 15px 0; flex-wrap: wrap;">';
-    Object.keys(data.tabs).forEach((tabName) => {
-      const tabId = `tab-${tabName.replace(/\s+/g, '-').toLowerCase()}`;
-      content += `<button onclick="window.showTab('${tabId}')" style="padding: 10px 20px; background: #3785d9; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500; transition: background 0.3s;">${escapeHtml(tabName)}</button>`;
-    });
-    content += '</div>';
-    
-    Object.entries(data.tabs).forEach(([tabName, tabContent]) => {
-      const tabId = `tab-${tabName.replace(/\s+/g, '-').toLowerCase()}`;
-      content += `<div id="${tabId}" style="display: none;">`;
+      let content = `<h3>🌎 ${escapeHtml(title)}</h3>`;
       
-      // Si tiene sub-pestañas
-      if (tabContent.subTabs) {
-        // Mostrar imagen principal si existe
-        if (tabContent.mainImage) {
-         content += `<img src="${escapeHtml(tabContent.mainImage)}" alt="${escapeHtml(tabName)}" style="max-width: 30%; height: auto; border-radius: 6px; margin: 10px auto; display: block;">`;
-        }
+      // Botón de cerrar mejorado
+      content += `<button onclick="window.closeTooltip()" class="close-button">×</button>`;
+      
+      if (data.countryImage) {
+        content += `<img src="${escapeHtml(data.countryImage)}" alt="${escapeHtml(title)}" class="no-shadow" style="max-width: 30%; height: 30%; margin: 10px auto; display: block;">`;
+      }
+
+      if (data.mainImage && data.tabs) {
+        content += `<img src="${escapeHtml(data.mainImage)}" alt="${escapeHtml(title)}" style="max-width: 70%; height: auto; border-radius: 12px; margin: 10px auto; display: block;">`;
         
-        content += '<div style="display: flex; gap: 10px; margin: 15px 0; flex-wrap: wrap;">';
-        Object.keys(tabContent.subTabs).forEach((subTabName) => {
-          const subTabId = `${tabId}-${subTabName.replace(/\s+/g, '-').toLowerCase()}`;
-          content += `<button onclick="window.showSubTab('${subTabId}')" style="padding: 8px 16px; background: #28a745; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500; transition: background 0.3s;">${escapeHtml(subTabName)}</button>`;
+        content += '<div style="display: flex; gap: 10px; margin: 20px 0; flex-wrap: wrap; justify-content: center;">';
+        Object.keys(data.tabs).forEach((tabName, index) => {
+          const tabId = `tab-${tabName.replace(/\s+/g, '-').toLowerCase()}`;
+          content += `<button onclick="window.showTab('${tabId}', this)" class="tab-button ${index === 0 ? 'active' : ''}" data-tab="${tabId}">📊 ${escapeHtml(tabName)}</button>`;
         });
         content += '</div>';
         
-        Object.entries(tabContent.subTabs).forEach(([subTabName, images]) => {
-          const subTabId = `${tabId}-${subTabName.replace(/\s+/g, '-').toLowerCase()}`;
-          content += `<div id="${subTabId}" style="display: none;">`;
-          content += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 10px; margin: 10px 0;">';
-          images.forEach(img => {
-            content += `<img src="${escapeHtml(img)}" alt="${escapeHtml(subTabName)}" style="width: 70%; height: auto; border-radius: 6px; margin: 0 auto; display: block;">`;
-          });
-          content += '</div>';
-          content += `<button onclick="window.hideSubTab('${subTabId}')" style="margin-top: 10px; padding: 8px 16px; background: #dc3545; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px;">Cerrar ${escapeHtml(subTabName)}</button>`;
+        Object.entries(data.tabs).forEach(([tabName, tabContent]) => {
+          const tabId = `tab-${tabName.replace(/\s+/g, '-').toLowerCase()}`;
+          content += `<div id="${tabId}" class="tab-content" style="display: none;">`;
+          
+          // Si tiene sub-pestañas
+          if (tabContent.subTabs) {
+            // Mostrar imagen principal si existe
+            if (tabContent.mainImage) {
+             content += `<img src="${escapeHtml(tabContent.mainImage)}" alt="${escapeHtml(tabName)}" style="max-width: 30%; height: auto; border-radius: 12px; margin: 10px auto; display: block;">`;
+            }
+            
+            content += '<div style="display: flex; gap: 10px; margin: 20px 0; flex-wrap: wrap; justify-content: center;">';
+            Object.keys(tabContent.subTabs).forEach((subTabName, index) => {
+              const subTabId = `${tabId}-${subTabName.replace(/\s+/g, '-').toLowerCase()}`;
+              content += `<button onclick="window.showSubTab('${subTabId}', this)" class="sub-tab-button ${index === 0 ? 'active' : ''}" data-subtab="${subTabId}">📈 ${escapeHtml(subTabName)}</button>`;
+            });
+            content += '</div>';
+            
+            Object.entries(tabContent.subTabs).forEach(([subTabName, images]) => {
+              const subTabId = `${tabId}-${subTabName.replace(/\s+/g, '-').toLowerCase()}`;
+              content += `<div id="${subTabId}" style="display: none;">`;
+              content += '<div class="image-grid">';
+              images.forEach(img => {
+                content += `<img src="${escapeHtml(img)}" alt="${escapeHtml(subTabName)}" style="width: 70%;">`;
+              });
+              content += '</div>';
+              content += `<button onclick="window.hideSubTab('${subTabId}')" style="margin-top: 15px; padding: 10px 20px; background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(239,68,68,0.3);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(239,68,68,0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(239,68,68,0.3)'">❌ Cerrar ${escapeHtml(subTabName)}</button>`;
+              content += '</div>';
+            });
+          }
+          // Si es un array de imágenes (como "Conclusiones")
+          else if (Array.isArray(tabContent)) {
+            content += '<div class="image-grid">';
+            tabContent.forEach(img => {
+              content += `<img src="${escapeHtml(img)}" alt="${escapeHtml(tabName)}" style="width: 90%;">`;
+            });
+            content += '</div>';
+          }
+          
+          content += `<button onclick="window.hideTab('${tabId}')" style="margin-top: 15px; padding: 10px 20px; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(245,158,11,0.3);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(245,158,11,0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(245,158,11,0.3)'">🔙 Cerrar ${escapeHtml(tabName)}</button>`;
           content += '</div>';
         });
       }
-      // Si es un array de imágenes (como "Conclusiones")
-      else if (Array.isArray(tabContent)) {
-        content += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 10px; margin: 10px 0;">';
-        tabContent.forEach(img => {
-          content += `<img src="${escapeHtml(img)}" alt="${escapeHtml(tabName)}" style="width: 90%; height: auto; border-radius: 6px; margin: 0 auto; display: block;">`;
+      else if (data.images && Array.isArray(data.images)) {
+        content += '<div class="image-grid">';
+        data.images.forEach(img => {
+          content += `<img src="${escapeHtml(img)}" alt="${escapeHtml(title)}">`;
         });
         content += '</div>';
+      } 
+      else if (data.image) {
+        content += `<img src="${escapeHtml(data.image)}" alt="${escapeHtml(title)}" style="max-width: 100%; height: auto; border-radius: 12px; margin: 10px 0;">`;
       }
       
-      content += `<button onclick="window.hideTab('${tabId}')" style="margin-top: 10px; padding: 8px 16px; background: #f44949; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px;">Cerrar ${escapeHtml(tabName)}</button>`;
-      content += '</div>';
-    });
-  }
-  else if (data.images && Array.isArray(data.images)) {
-    content += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 10px; margin: 10px 0;">';
-    data.images.forEach(img => {
-      content += `<img src="${escapeHtml(img)}" alt="${escapeHtml(title)}" style="width: 100%; height: auto; border-radius: 6px;">`;
-    });
-    content += '</div>';
-  } 
-  else if (data.image) {
-    content += `<img src="${escapeHtml(data.image)}" alt="${escapeHtml(title)}" style="max-width: 100%; height: auto; border-radius: 6px; margin: 10px 0;">`;
-  }
-  
-  if (data.info) {
-    content += `<p>${escapeHtml(data.info)}</p>`;
-  }
-  
-  countryInfoEl.innerHTML = content;
-  countryInfoEl.style.display = 'block';
-  countryInfoEl.setAttribute('aria-hidden','false');
-}
-
-    window.showSubTab = function(subTabId) {
-  // Ocultar todas las sub-pestañas del mismo grupo
-  const parentTabId = subTabId.split('-').slice(0, 3).join('-');
-  document.querySelectorAll(`[id^="${parentTabId}-"]`).forEach(subTab => {
-    if (subTab.id.startsWith(parentTabId + '-tab-')) {
-      subTab.style.display = 'none';
+      if (data.info) {
+        content += `<p style="font-size: 16px; color: #1f2937; margin-top: 15px; padding: 12px; background: rgba(59,130,246,0.1); border-radius: 8px; border-left: 4px solid #3b82f6;">ℹ️ ${escapeHtml(data.info)}</p>`;
+      }
+      
+      countryInfoEl.innerHTML = content;
+      countryInfoEl.style.display = 'block';
+      countryInfoEl.setAttribute('aria-hidden','false');
+      
+      // Trigger animation
+      setTimeout(() => {
+        countryInfoEl.classList.add('show');
+      }, 10);
     }
-  });
-  const subTab = document.getElementById(subTabId);
-  if (subTab) {
-    subTab.style.display = 'block';
-  }
-};
 
-window.hideSubTab = function(subTabId) {
-  const subTab = document.getElementById(subTabId);
-  if (subTab) {
-    subTab.style.display = 'none';
-  }
-};
+    window.showSubTab = function(subTabId, buttonEl) {
+      // Remover clase active de todos los botones del mismo grupo
+      const parentTabId = subTabId.split('-').slice(0, 3).join('-');
+      document.querySelectorAll('.sub-tab-button').forEach(btn => {
+        if (btn.getAttribute('data-subtab') && btn.getAttribute('data-subtab').startsWith(parentTabId)) {
+          btn.classList.remove('active');
+        }
+      });
+      
+      // Agregar clase active al botón clickeado
+      if (buttonEl) {
+        buttonEl.classList.add('active');
+      }
+      
+      // Ocultar todas las sub-pestañas del mismo grupo
+      document.querySelectorAll(`[id^="${parentTabId}-"]`).forEach(subTab => {
+        if (subTab.id.startsWith(parentTabId + '-tab-')) {
+          subTab.style.display = 'none';
+        }
+      });
+      
+      const subTab = document.getElementById(subTabId);
+      if (subTab) {
+        subTab.style.display = 'block';
+      }
+    };
+
+    window.hideSubTab = function(subTabId) {
+      const subTab = document.getElementById(subTabId);
+      if (subTab) {
+        subTab.style.display = 'none';
+      }
+      
+      // Remover clase active del botón correspondiente
+      const button = document.querySelector(`[data-subtab="${subTabId}"]`);
+      if (button) {
+        button.classList.remove('active');
+      }
+    };
     
-    window.showTab = function(tabId) {
+    window.showTab = function(tabId, buttonEl) {
+      // Remover clase active de todos los botones de pestañas
+      document.querySelectorAll('.tab-button').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      
+      // Agregar clase active al botón clickeado
+      if (buttonEl) {
+        buttonEl.classList.add('active');
+      }
+      
+      // Ocultar todas las pestañas
       document.querySelectorAll('[id^="tab-"]').forEach(tab => {
         tab.style.display = 'none';
       });
+      
       const tab = document.getElementById(tabId);
       if (tab) {
         tab.style.display = 'block';
@@ -536,11 +812,20 @@ window.hideSubTab = function(subTabId) {
       if (tab) {
         tab.style.display = 'none';
       }
+      
+      // Remover clase active del botón correspondiente
+      const button = document.querySelector(`[data-tab="${tabId}"]`);
+      if (button) {
+        button.classList.remove('active');
+      }
     };
     
     window.closeTooltip = function() {
-      countryInfoEl.style.display = 'none';
-      countryInfoEl.setAttribute('aria-hidden','true');
+      countryInfoEl.classList.remove('show');
+      setTimeout(() => {
+        countryInfoEl.style.display = 'none';
+        countryInfoEl.setAttribute('aria-hidden','true');
+      }, 400);
     };
 
     function escapeHtml(s) {
