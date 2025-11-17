@@ -57,6 +57,222 @@
       75% { transform: translate(150px, -150px) scale(1.2); opacity: 0.3; }
     }
 
+    /* PERSONAJE ANIMADO */
+    #character {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 120px;
+      height: 120px;
+      z-index: 250;
+      pointer-events: none;
+      transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+      display: none;
+    }
+    
+    #character.show {
+      display: block;
+      animation: characterEntrance 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    
+    @keyframes characterEntrance {
+      from {
+        transform: translateY(200px) scale(0.5) rotate(-180deg);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0) scale(1) rotate(0deg);
+        opacity: 1;
+      }
+    }
+    
+    .character-body {
+      width: 80px;
+      height: 80px;
+      background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
+      border-radius: 50%;
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      box-shadow: 0 10px 30px rgba(59,130,246,0.5);
+      animation: bounce 2s infinite ease-in-out;
+    }
+    
+    @keyframes bounce {
+      0%, 100% { transform: translateX(-50%) translateY(0); }
+      50% { transform: translateX(-50%) translateY(-10px); }
+    }
+    
+    .character-face {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+    
+    .character-eye {
+      width: 12px;
+      height: 12px;
+      background: white;
+      border-radius: 50%;
+      position: absolute;
+      animation: blink 3s infinite;
+    }
+    
+    .character-eye::after {
+      content: '';
+      width: 6px;
+      height: 6px;
+      background: #1e40af;
+      border-radius: 50%;
+      position: absolute;
+      top: 3px;
+      left: 3px;
+    }
+    
+    .character-eye.left { left: -15px; top: -5px; }
+    .character-eye.right { right: -15px; top: -5px; }
+    
+    @keyframes blink {
+      0%, 98%, 100% { transform: scaleY(1); }
+      99% { transform: scaleY(0.1); }
+    }
+    
+    .character-mouth {
+      width: 30px;
+      height: 15px;
+      border: 3px solid white;
+      border-top: none;
+      border-radius: 0 0 30px 30px;
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      animation: smile 2s infinite ease-in-out;
+    }
+    
+    @keyframes smile {
+      0%, 100% { transform: translateX(-50%) scaleX(1); }
+      50% { transform: translateX(-50%) scaleX(1.2); }
+    }
+    
+    .character-arms {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+    }
+    
+    .character-arm {
+      width: 40px;
+      height: 8px;
+      background: linear-gradient(90deg, #3b82f6, #60a5fa);
+      border-radius: 10px;
+      position: absolute;
+      top: 30px;
+    }
+    
+    .character-arm.left {
+      left: -10px;
+      transform-origin: right center;
+      animation: waveLeft 1.5s infinite ease-in-out;
+    }
+    
+    .character-arm.right {
+      right: -10px;
+      transform-origin: left center;
+      animation: waveRight 1.5s infinite ease-in-out;
+    }
+    
+    @keyframes waveLeft {
+      0%, 100% { transform: rotate(-20deg); }
+      50% { transform: rotate(-40deg); }
+    }
+    
+    @keyframes waveRight {
+      0%, 100% { transform: rotate(20deg); }
+      50% { transform: rotate(40deg); }
+    }
+    
+    /* Burbuja de diálogo del personaje */
+    #characterSpeech {
+      position: fixed;
+      bottom: 160px;
+      right: 30px;
+      max-width: 280px;
+      background: white;
+      color: #1f2937;
+      padding: 16px 20px;
+      border-radius: 20px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+      z-index: 249;
+      display: none;
+      font-size: 14px;
+      line-height: 1.6;
+      animation: speechBubble 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    
+    #characterSpeech::after {
+      content: '';
+      position: absolute;
+      bottom: -15px;
+      right: 40px;
+      width: 0;
+      height: 0;
+      border-left: 15px solid transparent;
+      border-right: 15px solid transparent;
+      border-top: 15px solid white;
+    }
+    
+    @keyframes speechBubble {
+      from {
+        transform: scale(0) translateY(20px);
+        opacity: 0;
+      }
+      to {
+        transform: scale(1) translateY(0);
+        opacity: 1;
+      }
+    }
+    
+    /* Efecto de confeti */
+    .confetti {
+      position: fixed;
+      width: 10px;
+      height: 10px;
+      z-index: 199;
+      pointer-events: none;
+    }
+    
+    @keyframes confettiFall {
+      0% {
+        transform: translateY(0) rotate(0deg);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(100vh) rotate(720deg);
+        opacity: 0;
+      }
+    }
+    
+    /* Efecto de typing para textos */
+    .typing-text {
+      overflow: hidden;
+      border-right: 2px solid #3b82f6;
+      white-space: nowrap;
+      animation: typing 2s steps(40) 1s both, blink-caret 0.75s step-end infinite;
+    }
+    
+    @keyframes typing {
+      from { width: 0; }
+      to { width: 100%; }
+    }
+    
+    @keyframes blink-caret {
+      from, to { border-color: transparent; }
+      50% { border-color: #3b82f6; }
+    }
+
     /* Tooltip/info box para país - ULTRA MEJORADO */
     #countryInfo {
       position: fixed;
@@ -196,7 +412,7 @@
       }
     }
     
-    /* Botones de pestañas ULTRA mejorados */
+    /* Botones de pestañas ULTRA mejorados con efecto de celebración */
     .tab-button {
       padding: 14px 28px;
       background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
@@ -259,12 +475,19 @@
     .tab-button.active {
       background: linear-gradient(135deg, #10b981 0%, #059669 100%);
       box-shadow: 0 8px 25px rgba(16,185,129,0.5);
-      animation: pulse 2s infinite;
+      animation: pulse 2s infinite, celebrate 0.6s ease-out;
     }
     
     @keyframes pulse {
       0%, 100% { box-shadow: 0 8px 25px rgba(16,185,129,0.5); }
       50% { box-shadow: 0 8px 35px rgba(16,185,129,0.7), 0 0 20px rgba(16,185,129,0.3); }
+    }
+    
+    @keyframes celebrate {
+      0%, 100% { transform: scale(1); }
+      25% { transform: scale(1.1) rotate(-5deg); }
+      50% { transform: scale(1.15) rotate(5deg); }
+      75% { transform: scale(1.1) rotate(-3deg); }
     }
     
     /* Sub-pestañas mejoradas */
@@ -291,7 +514,13 @@
     .sub-tab-button.active {
       background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
       box-shadow: 0 4px 15px rgba(245,158,11,0.5);
-      animation: pulse 2s infinite;
+      animation: pulse 2s infinite, wiggle 0.5s ease-out;
+    }
+    
+    @keyframes wiggle {
+      0%, 100% { transform: rotate(0deg); }
+      25% { transform: rotate(-10deg); }
+      75% { transform: rotate(10deg); }
     }
     
     /* Botón de cerrar MEGA mejorado */
@@ -431,18 +660,6 @@
       box-shadow: inset 0 0 10px rgba(255,255,255,0.3);
     }
     
-    /* Efecto de carga shimmer */
-    .loading-shimmer {
-      background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-      background-size: 200% 100%;
-      animation: shimmer 1.5s infinite;
-    }
-    
-    @keyframes shimmer {
-      0% { background-position: 200% 0; }
-      100% { background-position: -200% 0; }
-    }
-    
     /* Responsive para tablets */
     @media (max-width: 1024px) {
       #countryInfo {
@@ -456,6 +673,16 @@
       .tab-button {
         padding: 12px 22px;
         font-size: 14px;
+      }
+      #character {
+        width: 100px;
+        height: 100px;
+        bottom: 15px;
+        right: 15px;
+      }
+      .character-body {
+        width: 70px;
+        height: 70px;
       }
     }
     
@@ -478,6 +705,23 @@
       .sub-tab-button {
         padding: 9px 16px;
         font-size: 12px;
+      }
+      #character {
+        width: 80px;
+        height: 80px;
+        bottom: 10px;
+        right: 10px;
+      }
+      .character-body {
+        width: 60px;
+        height: 60px;
+      }
+      #characterSpeech {
+        max-width: 200px;
+        bottom: 110px;
+        right: 15px;
+        font-size: 12px;
+        padding: 12px 16px;
       }
     }
   </style>
@@ -509,6 +753,24 @@
 
   <div id="countryInfo" role="dialog" aria-hidden="true"></div>
   <div id="lightbox"></div>
+  
+  <!-- Personaje animado -->
+  <div id="character">
+    <div class="character-body">
+      <div class="character-arms">
+        <div class="character-arm left"></div>
+        <div class="character-arm right"></div>
+      </div>
+      <div class="character-face">
+        <div class="character-eye left"></div>
+        <div class="character-eye right"></div>
+        <div class="character-mouth"></div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Burbuja de diálogo -->
+  <div id="characterSpeech"></div>
 
   <!-- importmap para tres como módulos -->
   <script type="importmap">
@@ -530,6 +792,81 @@
     const container = document.getElementById('container');
     const countryInfoEl = document.getElementById('countryInfo');
     const lightbox = document.getElementById('lightbox');
+    const character = document.getElementById('character');
+    const characterSpeech = document.getElementById('characterSpeech');
+
+    // Mensajes del personaje por país
+    const characterMessages = {
+      'Colombia': [
+        '¡Hola! Bienvenido a Colombia',
+        '¡Exploremos juntos la balanza comercial colombiana!',
+      ],
+      'Brasil': [
+        'Brasil es el gigante de Sudamérica 🌟',
+      ],
+      'Perú': [
+        '¡Saludos! Descubre Perú',
+      ],
+      'Ecuador': [
+        '¡Hola! Exploremos Ecuador',
+      ],
+      'Panamá': [
+        'Panamá, el puente de las Américas 🌉',
+      ],
+      'Venezuela': [
+        '¡Hola! Conozcamos Venezuela',
+      ]
+    };
+
+    // Funciones del personaje
+    function showCharacter() {
+      character.classList.add('show');
+      character.style.display = 'block';
+    }
+
+    function hideCharacter() {
+      character.classList.remove('show');
+      setTimeout(() => {
+        character.style.display = 'none';
+      }, 500);
+    }
+
+    function characterSay(message, duration = 5000) {
+      characterSpeech.textContent = message;
+      characterSpeech.style.display = 'block';
+      
+      setTimeout(() => {
+        characterSpeech.style.display = 'none';
+      }, duration);
+    }
+
+    function characterCelebrate() {
+      character.style.animation = 'none';
+      setTimeout(() => {
+        character.style.animation = 'celebrate 0.6s ease-out';
+      }, 10);
+    }
+
+    function createConfetti() {
+      const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
+      const confettiCount = 50;
+      
+      for (let i = 0; i < confettiCount; i++) {
+        const confetti = document.createElement('div');
+        confetti.className = 'confetti';
+        confetti.style.left = Math.random() * 100 + '%';
+        confetti.style.top = '-10px';
+        confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        confetti.style.animation = `confettiFall ${2 + Math.random() * 2}s linear`;
+        confetti.style.animationDelay = Math.random() * 0.5 + 's';
+        
+        document.body.appendChild(confetti);
+        
+        setTimeout(() => {
+          confetti.remove();
+        }, 4000);
+      }
+    }
 
     // Simple check WebGL
     function checkWebGL() {
@@ -619,18 +956,27 @@
      'Norte de Santander': {
       mainImage: './nte.png',
        subTabs: {
+         'Balanza Comercial Norte de Santander - Venezuela': [
+            './31.png',
+         ],
          'Importación Norte de Santander': [
-             './28.png',
-            './29.png',
-            './30.png'
+       './nortedesantander/14.png',
+      './nortedesantander/15.png',
+      './nortedesantander/16.png',
+      './nortedesantander/17.png',
+      './nortedesantander/18.png',
          ],
          'Exportación Norte de Santander': [
-            './25.png',
-            './26.png',
-            './27.png'
+         './nortedesantander/3.png',
+      './nortedesantander/4.png',
+      './nortedesantander/5.png',
+      './nortedesantander/6.png',
+      './nortedesantander/7.png',
          ],
-          'Balanza Comercial Norte de Santander - Venezuela': [
-            './31.png',
+          'Servicios': [
+           './nortedesantander/9.png',
+      './nortedesantander/10.png',
+      './nortedesantander/11.png',
          ]
        }
      },
@@ -648,9 +994,19 @@
               countryImage: './brasil-1.png',
   mainImage: './21.png',
   tabs: {
-    'Exportaciones e Importaciones': [
-      './22.png',
-      './23.png',
+    'Exportaciones': [
+      './exportaciones/21.png',
+      './exportaciones/22.png',
+      './exportaciones/23.png',
+      './exportaciones/24.png',
+      './exportaciones/25.png',
+    ],
+    'Importaciones': [
+      './importaciones/21.png',
+      './importaciones/22.png',
+      './importaciones/23.png',
+      './importaciones/24.png',
+      './importaciones/25.png',
     ],
   },
         info: 'Capital: Brasilia' 
@@ -660,12 +1016,21 @@
         name: 'Perú', 
               countryImage: './peru-1.png',
   mainImage: './18.png',
-  tabs: {
-    'Exportaciones e Importaciones': [
-      './19.png',
-      './20.png',
+   tabs: {
+    'Exportaciones': [
+     './exportaciones/27.png',
+      './exportaciones/28.png',
+      './exportaciones/29.png',
+      './exportaciones/30.png',
+      './exportaciones/31.png',
     ],
-
+    'Importaciones': [
+      './importaciones/27.png',
+      './importaciones/28.png',
+      './importaciones/29.png',
+      './importaciones/30.png',
+      './importaciones/31.png',
+    ],
   },
         info: 'Capital: Lima' 
       },
@@ -675,9 +1040,19 @@
           countryImage: './ecuador-1.png',
   mainImage: './15.png',
   tabs: {
-    'Exportaciones e Importaciones': [
-      './16.png',
-      './17.png',
+    'Exportaciones': [
+     './exportaciones/9.png',
+      './exportaciones/10.png',
+      './exportaciones/11.png',
+      './exportaciones/12.png',
+      './exportaciones/13.png',
+    ],
+    'Importaciones': [
+       './importaciones/9.png',
+      './importaciones/10.png',
+      './importaciones/11.png',
+      './importaciones/12.png',
+      './importaciones/13.png',
     ],
   },
         info: 'Capital: Quito' 
@@ -687,9 +1062,19 @@
   countryImage: './panama-1.png',
   mainImage: './9.png',
   tabs: {
-    'Exportaciones e Importaciones': [
-      './10.png',
-      './11.png',
+    'Exportaciones': [
+      './exportaciones/3.png',
+      './exportaciones/4.png',
+      './exportaciones/5.png',
+      './exportaciones/6.png',
+      './exportaciones/7.png',
+    ],
+    'Importaciones': [
+      './importaciones/3.png',
+      './importaciones/4.png',
+      './importaciones/5.png',
+      './importaciones/6.png',
+      './importaciones/7.png',
     ],
   },
   info: 'Capital: Ciudad de Panamá' 
@@ -699,9 +1084,19 @@
         countryImage: './venezuela-1.png',
   mainImage: './12.png',
   tabs: {
-    'Exportaciones e Importaciones': [
-      './13.png',
-      './14.png',
+    'Exportaciones': [
+     './exportaciones/15.png',
+      './exportaciones/16.png',
+      './exportaciones/17.png',
+      './exportaciones/18.png',
+      './exportaciones/19.png',
+    ],
+    'Importaciones': [
+    './importaciones/15.png',
+      './importaciones/16.png',
+      './importaciones/17.png',
+      './importaciones/18.png',
+      './importaciones/19.png',
     ],
   },
         info: 'Capital: Caracas.' 
@@ -818,6 +1213,15 @@
     }
 
     function showCountryInfo(title, data, clientX, clientY) {
+      // Mostrar personaje y confeti
+      showCharacter();
+      createConfetti();
+      
+      // Mensaje del personaje
+      const messages = characterMessages[title] || ['¡Hola! Exploremos este país 🌍'];
+      const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+      characterSay(randomMessage, 4000);
+      
       let content = `<h3>🌎 ${escapeHtml(title)}</h3>`;
       
       // Agregar partículas de fondo
@@ -913,6 +1317,7 @@
       lightbox.innerHTML = `<img src="${src}" alt="Vista ampliada">`;
       lightbox.style.display = 'flex';
       lightbox.onclick = window.closeLightbox;
+      characterSay('¡Mira esta imagen en grande! 🖼️', 2000);
     };
 
     window.closeLightbox = function() {
@@ -921,6 +1326,10 @@
     };
 
     window.showSubTab = function(subTabId, buttonEl) {
+      // Personaje reacciona
+      characterCelebrate();
+      characterSay('¡Genial! Veamos esta información 📊', 2500);
+      
       // Remover clase active de todos los botones del mismo grupo
       const parentTabId = subTabId.split('-').slice(0, 3).join('-');
       document.querySelectorAll('.sub-tab-button').forEach(btn => {
@@ -961,6 +1370,11 @@
     };
     
     window.showTab = function(tabId, buttonEl) {
+      // Personaje reacciona y celebra
+      characterCelebrate();
+      createConfetti();
+      characterSay('¡Excelente elección! 🎉', 2500);
+      
       // Remover clase active de todos los botones de pestañas
       document.querySelectorAll('.tab-button').forEach(btn => {
         btn.classList.remove('active');
@@ -997,6 +1411,8 @@
     
     window.closeTooltip = function() {
       countryInfoEl.classList.remove('show');
+      hideCharacter();
+      characterSay('¡Hasta pronto! 👋', 2000);
       setTimeout(() => {
         countryInfoEl.style.display = 'none';
         countryInfoEl.setAttribute('aria-hidden','true');
