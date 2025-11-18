@@ -798,25 +798,58 @@
     // Mensajes del personaje por país
     const characterMessages = {
       'Colombia': [
-        '¡Hola! Bienvenido a Colombia',
-        '¡Exploremos juntos la balanza comercial colombiana!',
+        '<b>¡Bienvenidos a Colombia!</b>\n¿Sabías que… el petróleo, los combustibles minerales y sus derivados son la principal exportación de Colombia?⛽️',
       ],
       'Brasil': [
-        'Brasil es el gigante de Sudamérica 🌟',
+        '<b>¡Bienvenidos a Brasil!</b> ¿Sabían que el puerto de Santos en São Paulo es el puerto más grande de América Latina? ¡Maneja tanta carga al año como todos los puertos de Colombia juntos!🌟',
       ],
       'Perú': [
-        '¡Saludos! Descubre Perú',
+        '<b>¡Bienvenidos a Perú!</b> ¿sabían que el puerto del callao fue clave en la época colonial: era el punto de salida del oro y la plata del Virreinato del Perú hacia España? ⚓️',
       ],
       'Ecuador': [
-        '¡Hola! Exploremos Ecuador',
+        '<b>¡Bienvenidos a Ecuador!</b> ¿Sabian que… el puerto de Guayaquil es el corazón exportador del país? más del 70% del comercio marítimo ecuatoriano vende por Guayaquil.🚢',
       ],
       'Panamá': [
-        'Panamá, el puente de las Américas 🌉',
+        '<b>¡Bienvenidos a Panamá!</b> ¿Sabías que el Puerto de Manzanillo es parte de la red logística que acompaña al Canal de Panamá y conecta cerca de 150 puertos en el mundo , a pesar de su tamaño compacto? 🌉',
       ],
       'Venezuela': [
-        '¡Hola! Conozcamos Venezuela',
+        '<b>¡Bienvenidos a Venezuela!</b> ¿Sabías que San Antonio es uno de los pasos fronterizos más transitados de Sudamérica: ha llegado a mover más del 40% del comercio terrestre entre Colombia y Venezuela?🚛',
       ]
     };
+
+// --- Mostrar el último mensaje en HTML (negrilla) sin ocultar el globo ---
+window.__charRepeatTimeout = null;
+
+window.showLastCharacterMessage = function(duration = 10000) {
+  // si no hay mensaje guardado, salir
+  if (!window.lastCharacterMessage) return;
+
+  // mostrar burbuja (como HTML para respetar <b>, <br/>, etc.)
+  characterSpeech.innerHTML = window.lastCharacterMessage;
+  characterSpeech.style.display = 'block';
+
+  // asegurarnos de que el personaje esté visible (no oculta el globo)
+  // solo añade la clase de entrada si no está ya
+  if (!character.classList.contains('show')) {
+    character.classList.add('show');
+    character.style.display = 'block';
+  }
+
+  // limpiar timeout anterior
+  if (window.__charRepeatTimeout) {
+    clearTimeout(window.__charRepeatTimeout);
+    window.__charRepeatTimeout = null;
+  }
+
+  // si duration > 0 entonces ocultar después del tiempo
+  if (typeof duration === 'number' && duration > 0) {
+    window.__charRepeatTimeout = setTimeout(() => {
+      characterSpeech.style.display = 'none';
+      window.__charRepeatTimeout = null;
+    }, duration);
+  }
+};
+
 
     // Funciones del personaje
     function showCharacter() {
@@ -831,14 +864,17 @@
       }, 500);
     }
 
-    function characterSay(message, duration = 5000) {
-      characterSpeech.textContent = message;
+    function characterSay(message, duration = 15000) {
+      characterSpeech.innerHTML = message;
       characterSpeech.style.display = 'block';
       
       setTimeout(() => {
         characterSpeech.style.display = 'none';
       }, duration);
     }
+
+    // -- START: mejoras para controlar visibilidad del mensaje --
+
 
     function characterCelebrate() {
       character.style.animation = 'none';
@@ -947,11 +983,19 @@
   countryImage: './colombia-1.png',
   mainImage: './balanza-comercial.png',
   tabs: {
-    'Información sobre Colombia': [
+    'Sectores': [
       './4.png',
       './5.png',
+    ],
+       'Servicios': [
       './6.png',
-      './7.png',
+    ],
+      'Puertos': [
+      './puertos/2.png',
+      './puertos/3.png',
+      './puertos/4.png',
+      './puertos/5.png',
+      './puertos/6.png',
     ],
      'Norte de Santander': {
       mainImage: './nte.png',
@@ -1220,7 +1264,10 @@
       // Mensaje del personaje
       const messages = characterMessages[title] || ['¡Hola! Exploremos este país 🌍'];
       const randomMessage = messages[Math.floor(Math.random() * messages.length)];
-      characterSay(randomMessage, 4000);
+     characterSay(randomMessage);
+     window.lastCharacterMessage = randomMessage;
+     
+
       
       let content = `<h3>🌎 ${escapeHtml(title)}</h3>`;
       
@@ -1229,6 +1276,11 @@
       
       // Botón de cerrar mejorado
       content += `<button onclick="window.closeTooltip()" class="close-button">×</button>`;
+
+      content += `<div style="position: absolute; top: 15px; right: 70px; z-index: 110;">
+  <button onclick="window.showLastCharacterMessage(10000)" class="small" style="padding:8px 12px; border-radius:8px; background:#2563eb; color:#fff; border:none; cursor:pointer;">🔊 Repetir mensaje</button>
+</div>`;
+
       
       if (data.countryImage) {
         content += `<img src="${escapeHtml(data.countryImage)}" alt="${escapeHtml(title)}" class="no-shadow" style="max-width: 30%; height: auto; margin: 15px auto; display: block;">`;
@@ -1238,10 +1290,62 @@
         content += `<img src="${escapeHtml(data.mainImage)}" alt="${escapeHtml(title)}" class="main-image" style="max-width: 70%; height: auto; border-radius: 16px; margin: 15px auto; display: block;" onclick="window.openLightbox(this.src)">`;
         
         content += '<div style="display: flex; gap: 12px; margin: 25px 0; flex-wrap: wrap; justify-content: center;">';
-        Object.keys(data.tabs).forEach((tabName, index) => {
-          const tabId = `tab-${tabName.replace(/\s+/g, '-').toLowerCase()}`;
-          content += `<button onclick="window.showTab('${tabId}', this)" class="tab-button ${index === 0 ? 'active' : ''}" data-tab="${tabId}">📊 ${escapeHtml(tabName)}</button>`;
-        });
+      const tabMessages = {
+  'Sectores': '<b>Sectores:</b> ¿Sabías que <b>más del 70% de las exportaciones de Colombia provienen sólo de tres sectores</b>?',
+  'Servicios': '<b>Servicios:</b> ¿Sabías que <b>casi el 40% de las exportaciones de servicios de Colombia son solo transporte</b>?',
+  'Puertos': '<b>Puertos:</b> Entre solo Cartagena, Buenaventura, Santa Marta y Barranquilla se mueve más del <b>85%</b> del comercio marítimo colombiano .<br>👉¡Cuatro puertos conectan a todo un país con el mundo!.',
+  'Norte de Santander': '<b>¡Bienvenidos a Norte de Santander!</b>',
+  'Conclusiones': '<b>Conclusiones:</b> ¡Bienvenido a las conclusiones! Mis compañeros les explicaran sobre ellas. 😊'
+};
+
+// Mensajes por sub-pestaña (ajusta textos aquí)
+const subTabMessages = {
+  'Balanza Comercial Norte de Santander - Venezuela': '<b>Balanza Nte. Santander - Venezuela:</b> A pesar de los altibajos políticos y económicos, Norte de Santander ha tenido superávit comercial con Venezuela en 9 de los últimos 11 años , y en 2024 logró el más alto: más de 100 millones de dólares por favor.',
+  'Importación Norte de Santander': '<b>Importación (Norte de Santander):</b>  ¿Sabías que las importaciones en Norte de Santander es que más del 43% están concentradas en productos plásticos, sumando los polímeros de etileno y cloruro de vinilo, lo que muestra una fuerte dependencia de este sector para la industria y comercio local.?',
+  'Exportación Norte de Santander': '<b>Exportación (Norte de Santander):</b> ¿Sabías qué más del 91% de las exportaciones de Norte de Santander están dominadas por el carbón, en sus diferentes presentaciones (coques y hullas), evidenciando que la economía exportadora regional está altamente especializada y es poco diversificada?',
+  'Servicios': '<b>Servicios (Norte de Santander):</b> Sabías que… Norte de Santander exporta más servicios de software que varios departamentos con mayor infraestructura tecnológica , destacándose como un hub emergente donde el talento digital supera incluso a regiones tradicionalmente industriales.'
+};
+
+// Mensajes por país para Exportaciones / Importaciones
+const exportImportMessages = {
+  'Brasil': {
+    'Exportaciones': '<b>Exportaciones (Brasil):</b> Colombia exporta a Brasil tanto combustibles como químicos y plásticos, y lo curioso es que Brasil, aún siendo un gigante petrolero, importa ciertos lubricantes y derivados porque Colombia produce formulaciones específicas que su industria automotriz demanda.',
+    'Importaciones': '<b>Importaciones (Brasil):</b> Brasil es tan fuerte en maquinaria, vehículos y metalurgia que Colombia termina importando desde Brasil tecnología industrial que Brasil mismo fabrica con insumos , cerrando un ciclo productivo colombiano inesperadamente interdependiente.'
+  },
+  'Perú': {
+    'Exportaciones': '<b>Exportaciones (Perú):</b> Perú compra muchos combustibles, químicos y plásticos colombianos porque su industria depende de insumos que Colombia produce a gran escala , lo que reduce costos logísticos gracias a la cercanía andina.',
+    'Importaciones': '<b>Importaciones (Perú):</b> Colombia importa cobre, frutas y alimentos procesados ​​peruanos porque Perú es uno de los mayores productores de cobre del mundo y tiene una agricultura altamente diversificada , lo que lo convierte en un proveedor natural para la región.'
+  },
+  'Ecuador': {
+    'Exportaciones': '<b>Exportaciones (Ecuador):</b> Sabías que.. Ecuador importa grandes volúmenes de combustibles y plásticos desde Colombia porque, aunque es productor de petróleo, no tiene suficiente capacidad de refinación , lo que lo convierte en comprador de derivados colombianos.',
+    'Importaciones': '<b>Importaciones (Ecuador):</b> Sabías que.. el pescado y la madera ecuatoriana llegan masivamente a Colombia porque Ecuador posee una de las zonas pesqueras más ricas del Pacífico , lo que le permite exportar productos marinos con alta oferta y precios competitivos.'
+  },
+  'Panamá': {
+    'Exportaciones': '<b>Exportaciones (Panamá):</b> Sabías que.. Panamá es uno de los principales destinos de reexportación en América Latina , por eso muchos productos colombianos, (como productos farmacéuticos, aceites y maquinaria) llegan allí solo para luego ser enviados a otros países.',
+    'Importaciones': '<b>Importaciones (Panamá):</b> Sabías que.. aunque es un país pequeño, Panamá es un proveedor clave de Colombia porque muchos bienes importados (como plásticos, aluminio y productos farmacéuticos) proceden de zonas francas internacionales instaladas en ese país.'
+  },
+  'Venezuela': {
+    'Exportaciones': '<b>Exportaciones (Venezuela):</b> A pesar de la cercanía geográfica, Venezuela importa desde Colombia una mezcla tan variada que va desde plásticos básicos hasta maquinaria pesada , lo que convierte a la frontera colombo-venezolana en una de las pocas en Sudamérica donde se exportan al mismo tiempo bienes de consumo cotidiano y equipos industriales de alto valor.',
+    'Importaciones': '<b>Importaciones (Venezuela):</b> Colombia importa de Venezuela insumos tan especializados como plomo refinado y aleaciones metálicas, a la vez que productos simples como papel y cartón; Esto hace que la relación comercial funcione como un intercambio “industrial por industrial” , donde lo que se mueve no son productos finales sino materias primas claves para la manufactura colombiana.'
+  }
+};
+
+
+
+Object.keys(data.tabs).forEach((tabName, index) => {
+  const tabId = `tab-${tabName.replace(/\s+/g, '-').toLowerCase()}`;
+
+  let msg = '¡Excelente elección! 🎉';
+  if (tabMessages[tabName]) {
+    msg = tabMessages[tabName];
+  } else if ((tabName === 'Exportaciones' || tabName === 'Importaciones') 
+             && exportImportMessages[title] && exportImportMessages[title][tabName]) {
+    msg = exportImportMessages[title][tabName];
+  }
+
+  content += `<button onclick="window.showTab('${tabId}', this)" class="tab-button ${index === 0 ? 'active' : ''}" data-tab="${tabId}" data-msg="${escapeHtml(msg)}">📊 ${escapeHtml(tabName)}</button>`;
+});
+
         content += '</div>';
         
         Object.entries(data.tabs).forEach(([tabName, tabContent]) => {
@@ -1256,10 +1360,14 @@
             }
             
             content += '<div style="display: flex; gap: 12px; margin: 25px 0; flex-wrap: wrap; justify-content: center;">';
-            Object.keys(tabContent.subTabs).forEach((subTabName, index) => {
-              const subTabId = `${tabId}-${subTabName.replace(/\s+/g, '-').toLowerCase()}`;
-              content += `<button onclick="window.showSubTab('${subTabId}', this)" class="sub-tab-button ${index === 0 ? 'active' : ''}" data-subtab="${subTabId}">📈 ${escapeHtml(subTabName)}</button>`;
-            });
+          Object.keys(tabContent.subTabs).forEach((subTabName, index) => {
+  const subTabId = `${tabId}-${subTabName.replace(/\s+/g, '-').toLowerCase()}`;
+  // mensaje específico para la sub-pestaña (si existe)
+  const subMsg = subTabMessages[subTabName] ? subTabMessages[subTabName] : '¡Veamos esa información!';
+  // guardamos el mensaje en data-msg para que showSubTab lo use (escape para seguridad)
+  content += `<button onclick="window.showSubTab('${subTabId}', this)" class="sub-tab-button ${index === 0 ? 'active' : ''}" data-subtab="${subTabId}" data-msg="${escapeHtml(subMsg)}">📈 ${escapeHtml(subTabName)}</button>`;
+});
+
             content += '</div>';
             
             Object.entries(tabContent.subTabs).forEach(([subTabName, images]) => {
@@ -1317,7 +1425,8 @@
       lightbox.innerHTML = `<img src="${src}" alt="Vista ampliada">`;
       lightbox.style.display = 'flex';
       lightbox.onclick = window.closeLightbox;
-      characterSay('¡Mira esta imagen en grande! 🖼️', 2000);
+     characterSay('¡Mira esta imagen en grande! 🖼️');
+
     };
 
     window.closeLightbox = function() {
@@ -1325,36 +1434,49 @@
       lightbox.innerHTML = '';
     };
 
-    window.showSubTab = function(subTabId, buttonEl) {
-      // Personaje reacciona
-      characterCelebrate();
-      characterSay('¡Genial! Veamos esta información 📊', 2500);
-      
-      // Remover clase active de todos los botones del mismo grupo
-      const parentTabId = subTabId.split('-').slice(0, 3).join('-');
-      document.querySelectorAll('.sub-tab-button').forEach(btn => {
-        if (btn.getAttribute('data-subtab') && btn.getAttribute('data-subtab').startsWith(parentTabId)) {
-          btn.classList.remove('active');
-        }
-      });
-      
-      // Agregar clase active al botón clickeado
-      if (buttonEl) {
-        buttonEl.classList.add('active');
-      }
-      
-      // Ocultar todas las sub-pestañas del mismo grupo
-      document.querySelectorAll(`[id^="${parentTabId}-"]`).forEach(subTab => {
-        if (subTab.id.startsWith(parentTabId + '-tab-')) {
-          subTab.style.display = 'none';
-        }
-      });
-      
-      const subTab = document.getElementById(subTabId);
-      if (subTab) {
-        subTab.style.display = 'block';
-      }
-    };
+  window.showSubTab = function(subTabId, buttonEl) {
+  // leer mensaje del botón (si lo tiene)
+  let msg = '¡Genial! Veamos esta información 📊';
+  try {
+    if (buttonEl && buttonEl.dataset && buttonEl.dataset.msg) {
+      msg = buttonEl.dataset.msg;
+    }
+  } catch (e) {
+    // ignore
+  }
+
+  // Personaje reacciona
+  characterCelebrate();
+  createConfetti();
+
+  // Mostrar mensaje (characterSay usa innerHTML en tu código actual)
+  characterSay(msg);
+
+  // Remover clase active de todos los botones del mismo grupo
+  const parentTabId = subTabId.split('-').slice(0, 3).join('-');
+  document.querySelectorAll('.sub-tab-button').forEach(btn => {
+    if (btn.getAttribute('data-subtab') && btn.getAttribute('data-subtab').startsWith(parentTabId)) {
+      btn.classList.remove('active');
+    }
+  });
+
+  // Agregar clase active al botón clickeado
+  if (buttonEl) {
+    buttonEl.classList.add('active');
+  }
+
+  // Ocultar todas las sub-pestañas del mismo grupo
+  document.querySelectorAll(`[id^="${parentTabId}-"]`).forEach(subTab => {
+    if (subTab.id.startsWith(parentTabId + '-tab-')) {
+      subTab.style.display = 'none';
+    }
+  });
+
+  const subTab = document.getElementById(subTabId);
+  if (subTab) {
+    subTab.style.display = 'block';
+  }
+};
 
     window.hideSubTab = function(subTabId) {
       const subTab = document.getElementById(subTabId);
@@ -1369,32 +1491,47 @@
       }
     };
     
-    window.showTab = function(tabId, buttonEl) {
-      // Personaje reacciona y celebra
-      characterCelebrate();
-      createConfetti();
-      characterSay('¡Excelente elección! 🎉', 2500);
-      
-      // Remover clase active de todos los botones de pestañas
-      document.querySelectorAll('.tab-button').forEach(btn => {
-        btn.classList.remove('active');
-      });
-      
-      // Agregar clase active al botón clickeado
-      if (buttonEl) {
-        buttonEl.classList.add('active');
-      }
-      
-      // Ocultar todas las pestañas
-      document.querySelectorAll('[id^="tab-"]').forEach(tab => {
-        tab.style.display = 'none';
-      });
-      
-      const tab = document.getElementById(tabId);
-      if (tab) {
-        tab.style.display = 'block';
-      }
-    };
+window.showTab = function(tabId, buttonEl) {
+  // mensaje por defecto
+  let msg = '¡Excelente elección! 🎉';
+  // si el botón tiene data-msg, lo usamos (permitiendo HTML)
+  try {
+    if (buttonEl && buttonEl.dataset && buttonEl.dataset.msg) {
+      // si quieres que respete HTML (negrillas) usa innerHTML; aquí lo ponemos tal cual
+      msg = buttonEl.dataset.msg;
+    }
+  } catch (e) {
+    // ignore
+  }
+
+  // Personaje reacciona y celebra (puedes quitar createConfetti() si no quieres confeti)
+  characterCelebrate();
+  createConfetti();
+
+  // Mostrar el mensaje (usa innerHTML para respetar <b>)
+  characterSay(msg);
+
+  // Remover clase active de todos los botones de pestañas
+  document.querySelectorAll('.tab-button').forEach(btn => {
+    btn.classList.remove('active');
+  });
+
+  // Agregar clase active al botón clickeado
+  if (buttonEl) {
+    buttonEl.classList.add('active');
+  }
+
+  // Ocultar todas las pestañas
+  document.querySelectorAll('[id^="tab-"]').forEach(tab => {
+    tab.style.display = 'none';
+  });
+
+  const tab = document.getElementById(tabId);
+  if (tab) {
+    tab.style.display = 'block';
+  }
+};
+
     
     window.hideTab = function(tabId) {
       const tab = document.getElementById(tabId);
@@ -1412,7 +1549,7 @@
     window.closeTooltip = function() {
       countryInfoEl.classList.remove('show');
       hideCharacter();
-      characterSay('¡Hasta pronto! 👋', 2000);
+      characterSay('¡Hasta pronto! 👋');
       setTimeout(() => {
         countryInfoEl.style.display = 'none';
         countryInfoEl.setAttribute('aria-hidden','true');
